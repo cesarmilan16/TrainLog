@@ -1,7 +1,11 @@
 const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+
 
 const db = new Database('trainlog.db');
+const JWT_SECRET = process.env.JWT_SECRET;
+
 
 // Crear tabla si no existe
 db.prepare(`
@@ -43,7 +47,7 @@ function addUser(user) {
             INSERT INTO users (email, password)
             VALUES (?, ?)
     `);
-        
+
         // Encriptamos la contraseña
         const hashedPassword = bcrypt.hashSync(password, 10);
         // Cogemos el resultado de la query
@@ -70,4 +74,61 @@ function addUser(user) {
     }
 }
 
-module.exports = { getUsers, addUser };
+function login({ email, password } = {}) {
+    if (!email || !password) {
+        return {
+            status: 400,
+            error: 'Email y password son obligatorios'
+        }
+    }
+
+    try {
+        const stmt = db.prepare(`
+            SELECT id, email, password FROM users
+            WHERE  email = ? 
+        `);
+
+        const user = stmt.get(email);
+
+        if (!user) {
+            return {
+                status: 401,
+                error: 'Credenciales incorrectas'
+            };
+        }
+
+        const valid = bcrypt.compareSync(password, user.password);
+
+        if (!valid) {
+            return {
+                status: 401,
+                error: 'Credenciales incorrectas'
+            }
+        }
+
+        // 🔐 Generar JWT
+        const token = jwt.sign(
+            {
+                id: user.id,
+                email: user.email
+            },
+            JWT_SECRET,
+            { expiresIn: '1h' } // duración
+        );
+
+        return {
+            message: 'Login correcto',
+            id: user.id,
+            email: user.email,
+            token
+        };
+
+    } catch (error) {
+        return {
+            status: 500,
+            error: 'Error interno'
+        }
+    }
+}
+
+module.exports = { getUsers, addUser, login };

@@ -1,5 +1,7 @@
 const express = require('express');
-const { getUsers, addUser, login } = require('../data/users.data');
+const { getUsers, registrerUser, login } = require('../data/users.data');
+const auth = require('../middleware/auth');
+
 const router = express.Router();
 
 //Obtener todos los usuarios
@@ -9,8 +11,8 @@ router.get('/', (req, res) => {
 });
 
 // Crear usuario
-router.post('/', (req, res) => {
-    const result = addUser(req.body);
+router.post('/', auth, (req, res) => {
+    const result = registrerUser(req.body, req.user.id);
 
     // Errores de validación o negocio
     if (result.error) {
@@ -43,6 +45,13 @@ router.post('/login', (req, res) => {
         email: result.email,
         token: result.token
     })
+});
+
+router.get('/profile', auth, (req, res) => {
+    res.json({
+        message: 'Acceso permitido',
+        user: req.user
+    });
 });
 
 module.exports = router;

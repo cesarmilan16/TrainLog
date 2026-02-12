@@ -12,25 +12,28 @@ db.prepare(`
   CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL
-  )
+    password TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'USER',
+    manager_id INTEGER,
+    FOREIGN KEY (manager_id) REFERENCES users(id)
+    )
 `).run();
 
 const demoHash = bcrypt.hashSync('1234', 10);
 
 // Usuario de prueba
 db.prepare(`
-  INSERT OR IGNORE INTO users (email, password)
-  VALUES (?, ?)
-`).run('demo@trainlog.com', demoHash);
+  INSERT OR IGNORE INTO users (email, password, role)
+  VALUES (?, ?, ?)
+`).run('demo@trainlog.com', demoHash, 'MANAGER');
 
 // Función para obtener usuarios
 function getUsers() {
-    return db.prepare('SELECT id, email FROM users').all();
+    return db.prepare('SELECT id, email, role, manager_id FROM users').all();
 };
 
 // Función para crear usuarios
-function addUser(user) {
+function registrerUser(user, managerId) {
     const { email, password } = user;
 
     // Validación de los campos email y password
@@ -44,14 +47,14 @@ function addUser(user) {
     try {
         // Preparamos la query
         const stmt = db.prepare(`
-            INSERT INTO users (email, password)
-            VALUES (?, ?)
+            INSERT INTO users (email, password, role, manager_id)
+            VALUES (?, ?, 'USER', ?)
     `);
 
         // Encriptamos la contraseña
         const hashedPassword = bcrypt.hashSync(password, 10);
         // Cogemos el resultado de la query
-        const result = stmt.run(email, hashedPassword);
+        const result = stmt.run(email, hashedPassword, managerId);
 
         // Si todo ha salido bien
         return {
@@ -84,7 +87,7 @@ function login({ email, password } = {}) {
 
     try {
         const stmt = db.prepare(`
-            SELECT id, email, password FROM users
+            SELECT id, email, password, role FROM users
             WHERE  email = ? 
         `);
 
@@ -106,14 +109,15 @@ function login({ email, password } = {}) {
             }
         }
 
-        // 🔐 Generar JWT
+        // Generar JWT
         const token = jwt.sign(
             {
                 id: user.id,
-                email: user.email
+                email: user.email,
+                role: user.role
             },
             JWT_SECRET,
-            { expiresIn: '1h' } // duración
+            { expiresIn: '7d' } // duración
         );
 
         return {
@@ -131,4 +135,4 @@ function login({ email, password } = {}) {
     }
 }
 
-module.exports = { getUsers, addUser, login };
+module.exports = { getUsers, registrerUser, login };

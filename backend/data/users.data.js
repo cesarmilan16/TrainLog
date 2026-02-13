@@ -49,7 +49,7 @@ function registrerUser(user, managerId) {
         const stmt = db.prepare(`
             INSERT INTO users (email, password, role, manager_id)
             VALUES (?, ?, 'USER', ?)
-    `);
+        `);
 
         // Encriptamos la contraseña
         const hashedPassword = bcrypt.hashSync(password, 10);
@@ -135,4 +135,23 @@ function login({ email, password } = {}) {
     }
 }
 
-module.exports = { getUsers, registrerUser, login };
+function getClients(managerId) {
+    // Preparamos la query
+    const stmt = db.prepare(`
+            SELECT id, email FROM users
+            WHERE  manager_id = ? 
+        `);
+
+    const result = stmt.all(managerId)
+
+    if (!result) {
+        return {
+            status: 400,
+            error: 'No hay usuarios'
+        }
+    }
+
+    return result;
+};
+
+module.exports = { getUsers, registrerUser, login, getClients };

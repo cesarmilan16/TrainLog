@@ -1,6 +1,7 @@
 const express = require('express');
-const { getUsers, registrerUser, login } = require('../data/users.data');
+const { getUsers, registrerUser, login, getClients } = require('../data/users.data');
 const auth = require('../middleware/auth');
+const authorize = require('../middleware/authorize');
 
 const router = express.Router();
 
@@ -11,7 +12,7 @@ router.get('/', (req, res) => {
 });
 
 // Crear usuario
-router.post('/', auth, (req, res) => {
+router.post('/', auth, authorize('MANAGER'), (req, res) => {
     const result = registrerUser(req.body, req.user.id);
 
     // Errores de validación o negocio
@@ -28,6 +29,7 @@ router.post('/', auth, (req, res) => {
     });
 });
 
+// Inicia sesión
 router.post('/login', (req, res) => {
     const result = login(req.body);
 
@@ -47,6 +49,22 @@ router.post('/login', (req, res) => {
     })
 });
 
+router.get('/clients', auth, authorize('MANAGER'), (req, res) => {
+    const data = getClients(req.user.id);
+
+    if (data.length === 0) {
+        return res.status(data.status).json({ 
+            message: data.error 
+        });
+    };
+
+    res.status(200).json({
+        message: 'Lista de clientes',
+        data
+    });
+});
+
+// endpoint para ver los datos del jwt
 router.get('/profile', auth, (req, res) => {
     res.json({
         message: 'Acceso permitido',

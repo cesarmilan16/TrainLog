@@ -23,4 +23,7 @@ router.post('/', auth, authorize('MANAGER'), (req, res) => {
 
 });
 
+//Obtener entrenamientos del usuario
+
+
 module.exports = router;

@@ -60,7 +60,48 @@ function newWorkout(data, managerId) {
             error: 'Error interno'
         };
     }
-
 }
 
-module.exports = { newWorkout };
+function getMyWorkouts(userId) {
+    // Preparamos la query
+    const stmt = db.prepare(`
+            SELECT name FROM workouts
+            WHERE user_id = ?
+        `);
+
+    const result = stmt.all(userId)
+
+    if (result.length === 0) {
+        return {
+            status: 403,
+            error: 'Este usuario no tiene entrenamientos'
+        };
+    };
+
+    return result;
+}
+
+function getWorkoutsManager(userId, managerId) {
+    // Preparamos la query
+    const stmt = db.prepare(`
+            SELECT workouts.id, workouts.name, users.email AS name_user
+            FROM workouts
+            JOIN users ON workouts.user_id = users.id
+            WHERE workouts.user_id = ? 
+            AND workouts.manager_id = ?
+        `);
+
+    const result = stmt.all(userId, managerId)
+
+    if (result.length === 0) {
+        return {
+            status: 404,
+            error: 'Este usuario no tiene entrenamientos'
+        };
+    };
+
+    return result;
+}
+
+
+module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager };

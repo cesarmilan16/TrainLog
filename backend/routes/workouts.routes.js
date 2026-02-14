@@ -1,7 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
-const { newWorkout, getMyWorkouts, getWorkoutsManager } = require('../data/workouts.data');
+const { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard } = require('../data/workouts.data');
 
 const router = express.Router();
 
@@ -51,6 +51,21 @@ router.get('/user/:userId', auth, authorize('MANAGER'), (req, res) => {
 
     res.status(200).json({
         message: "Entrenamientos del manager",
+        data: result
+    });
+});
+
+router.get('/dashboard', auth, authorize('USER'), (req, res) => {
+    const result = getUserDashboard(req.user.id);
+
+    if (result.error) {
+        const status = result.status ?? 400;
+        return res.status(status).json({
+            message: result.error
+        });
+    };
+
+    res.status(200).json({
         data: result
     });
 });

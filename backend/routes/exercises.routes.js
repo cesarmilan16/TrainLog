@@ -23,6 +23,7 @@ router.post('/', auth, authorize('MANAGER'), (req, res) => {
     })
 });
 
+// Ver ejercicios
 router.get('/:workoutId', auth, authorize('MANAGER'), (req, res) => {
     const result = getExercises(req.params.workoutId, req.user.id);
 

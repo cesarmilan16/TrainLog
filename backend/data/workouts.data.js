@@ -65,17 +65,14 @@ function newWorkout(data, managerId) {
 function getMyWorkouts(userId) {
     // Preparamos la query
     const stmt = db.prepare(`
-            SELECT name FROM workouts
+            SELECT id, name FROM workouts
             WHERE user_id = ?
         `);
 
     const result = stmt.all(userId)
 
     if (result.length === 0) {
-        return {
-            status: 403,
-            error: 'Este usuario no tiene entrenamientos'
-        };
+        return [];
     };
 
     return result;
@@ -101,7 +98,70 @@ function getWorkoutsManager(userId, managerId) {
     };
 
     return result;
+};
+
+function getUserDashboard(userId) {
+    // Preparamos las querys
+    const workoutsStmt = db.prepare(`
+        SELECT id, name
+        FROM workouts
+        WHERE user_id = ?
+    `);
+
+    const exercisesStmt = db.prepare(`
+        SELECT id, name, sets, reps, order_index
+        FROM workout_exercises
+        WHERE workout_id = ?
+        ORDER BY order_index
+    `);
+
+    const lastLogStmt = db.prepare(`
+        SELECT weight, reps, date
+        FROM exercise_logs
+        WHERE exercise_id = ?
+        AND user_id = ?
+        ORDER BY date DESC
+        LIMIT 1
+    `);
+
+    try {
+        const workouts = workoutsStmt.all(userId);
+
+        if (workouts.length === 0) {
+            return [];
+        }
+
+        // Vamos con el dashboard
+        const dashboard = workouts.map(workout => {
+            // ejercicios del workout
+            const exercises = exercisesStmt.all(workout.id).map(exercise => {
+                // último log
+                const lastLog = lastLogStmt.get(exercise.id, userId);
+
+                return {
+                    ...exercise,
+                    last_log: lastLog || null
+                };
+            });
+
+            return {
+                id: workout.id,
+                name: workout.name,
+                exercises
+            };
+        });
+
+        return dashboard;
+
+    } catch (error) {
+        console.error(error);
+        return {
+            estatus: 500,
+            error: 'Error interno'
+        }
+    }
+
 }
 
 
-module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager };
+module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard };

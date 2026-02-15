@@ -129,7 +129,7 @@ function getUserDashboard(userId) {
 
         if (workouts.length === 0) {
             return [];
-        }
+        };
 
         // Vamos con el dashboard
         const dashboard = workouts.map(workout => {
@@ -156,12 +156,46 @@ function getUserDashboard(userId) {
     } catch (error) {
         console.error(error);
         return {
-            estatus: 500,
+            status: 500,
             error: 'Error interno'
         }
-    }
+    };
 
-}
+};
+
+function getManagerDashboard(userId, managerId) {
+
+     // Preparamos la query
+    const userStmt = db.prepare(`
+            SELECT id
+            FROM users
+            WHERE id = ? 
+            AND manager_id = ?
+        `);
+
+    const user = userStmt.get(userId, managerId)
+
+    if (!user) {
+        return {
+            status: 403,
+            error: 'Este usuario no perntenece al manager'
+        };
+    };
+
+    try {
+
+        const dashboard = getUserDashboard(userId)
+
+        return dashboard;
+
+    } catch (error) {
+        console.error(error)
+        return {
+            status: 500,
+            error: 'Error interno'
+        }
+    };
+};
 
 
-module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard };
+module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard, getManagerDashboard };

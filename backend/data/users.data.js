@@ -155,4 +155,52 @@ function getClients(managerId) {
     return result;
 };
 
-module.exports = { getUsers, registrerUser, login, getClients };
+function getManagerClients(managerId) {
+
+    try {
+        const usersStmt = db.prepare(`
+            SELECT id, email, name
+            FROM users
+            WHERE manager_id = ?
+        `);
+
+        const workoutsCountStmt = db.prepare(`
+            SELECT COUNT(*) as total
+            FROM workouts
+            WHERE user_id = ?
+        `);
+
+        const lastActivityStmt = db.prepare(`
+            SELECT MAX(date) as last_activity
+            FROM exercise_logs
+            WHERE user_id = ?
+        `);
+
+        const users = usersStmt.all(managerId);
+
+        const clients = users.map(user => {
+
+            const workoutsCount = workoutsCountStmt.get(user.id);
+            const lastActivity = lastActivityStmt.get(user.id);
+
+            return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                workouts_count: workoutsCount.total,
+                last_activity: lastActivity.last_activity || null
+            };
+        });
+
+        return clients;
+
+    } catch (error) {
+        console.error(error);
+        return {
+            status: 500,
+            error: 'Error interno'
+        };
+    }
+};
+
+module.exports = { getUsers, registrerUser, login, getClients, getManagerClients };

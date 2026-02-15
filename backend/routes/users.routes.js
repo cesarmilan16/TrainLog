@@ -1,5 +1,5 @@
 const express = require('express');
-const { getUsers, registrerUser, login, getClients } = require('../data/users.data');
+const { getUsers, registrerUser, login, getClients, getManagerClients } = require('../data/users.data');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 
@@ -71,5 +71,22 @@ router.get('/profile', auth, (req, res) => {
         user: req.user
     });
 });
+
+router.get('/manager/clients', auth, authorize('MANAGER'), (req, res) => {
+
+    const result = getManagerClients(req.user.id);
+
+    if (result.error) {
+        const status = result.status ?? 500;
+        return res.status(status).json({
+            message: result.error
+        });
+    }
+
+    res.status(200).json({
+        data: result
+    });
+});
+
 
 module.exports = router;

@@ -96,7 +96,7 @@ export class ManagerDashboardComponent implements OnInit {
 
   readonly editEntityForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
-    email: [''],
+    email: ['', Validators.email],
     password: ['']
   });
 
@@ -272,6 +272,12 @@ export class ManagerDashboardComponent implements OnInit {
 
   submitEditModal(): void {
     if (!this.editModalType || !this.editTargetId) {
+      return;
+    }
+
+    if (this.editEntityForm.invalid) {
+      this.editEntityForm.markAllAsTouched();
+      this.cdr.markForCheck();
       return;
     }
 

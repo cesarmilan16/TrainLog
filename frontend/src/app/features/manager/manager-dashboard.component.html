@@ -82,9 +82,30 @@
 
         @if (showCreateClient) {
           <form [formGroup]="createClientForm" (ngSubmit)="createClient()" class="form-row create-form">
-            <input type="text" placeholder="Nombre" formControlName="name" />
-            <input type="email" placeholder="Email" formControlName="email" />
-            <input type="password" placeholder="Password" formControlName="password" />
+            <div class="field">
+              <input type="text" placeholder="Nombre" formControlName="name" />
+              @if (createClientForm.controls.name.touched && createClientForm.controls.name.invalid) {
+                <small class="field-error">El nombre es obligatorio</small>
+              }
+            </div>
+            <div class="field">
+              <input type="email" placeholder="Email" formControlName="email" />
+              @if (createClientForm.controls.email.touched && createClientForm.controls.email.hasError('required')) {
+                <small class="field-error">El email es obligatorio</small>
+              }
+              @if (createClientForm.controls.email.touched && createClientForm.controls.email.hasError('email')) {
+                <small class="field-error">Formato de email inválido</small>
+              }
+            </div>
+            <div class="field">
+              <input type="password" placeholder="Password" formControlName="password" />
+              @if (createClientForm.controls.password.touched && createClientForm.controls.password.hasError('required')) {
+                <small class="field-error">La contraseña es obligatoria</small>
+              }
+              @if (createClientForm.controls.password.touched && createClientForm.controls.password.hasError('minlength')) {
+                <small class="field-error">Mínimo 4 caracteres</small>
+              }
+            </div>
             <button type="submit">Crear cliente</button>
           </form>
         }
@@ -169,7 +190,12 @@
 
         @if (showCreateWorkout) {
           <form [formGroup]="createWorkoutForm" (ngSubmit)="createWorkout()" class="form-row create-form">
-            <input type="text" placeholder="Nombre del workout" formControlName="name" />
+            <div class="field">
+              <input type="text" placeholder="Nombre del workout" formControlName="name" />
+              @if (createWorkoutForm.controls.name.touched && createWorkoutForm.controls.name.invalid) {
+                <small class="field-error">El nombre es obligatorio</small>
+              }
+            </div>
             <button type="submit" [disabled]="!selectedClientId">Crear workout</button>
           </form>
         }
@@ -246,29 +272,47 @@
                       <div class="field">
                         <label [for]="'edit-exercise-name-' + exercise.id">Nombre</label>
                         <input [id]="'edit-exercise-name-' + exercise.id" type="text" formControlName="name" placeholder="Ej. Press banca" />
+                        @if (editExerciseForm.controls.name.touched && editExerciseForm.controls.name.invalid) {
+                          <small class="field-error">El nombre es obligatorio</small>
+                        }
                       </div>
                       <div class="mini-grid mini-grid-main">
                         <div class="field">
                           <label [for]="'edit-exercise-sets-' + exercise.id">Series</label>
                           <input [id]="'edit-exercise-sets-' + exercise.id" type="number" formControlName="sets" placeholder="3" />
+                          @if (editExerciseForm.controls.sets.touched && editExerciseForm.controls.sets.invalid) {
+                            <small class="field-error">Series debe ser mayor que 0</small>
+                          }
                         </div>
                         <div class="field">
                           <label [for]="'edit-exercise-reps-' + exercise.id">Repeticiones</label>
                           <input [id]="'edit-exercise-reps-' + exercise.id" type="number" formControlName="reps" placeholder="10" />
+                          @if (editExerciseForm.controls.reps.touched && editExerciseForm.controls.reps.invalid) {
+                            <small class="field-error">Repeticiones debe ser mayor que 0</small>
+                          }
                         </div>
                         <div class="field">
                           <label [for]="'edit-exercise-order-' + exercise.id">Orden</label>
                           <input [id]="'edit-exercise-order-' + exercise.id" type="number" formControlName="order_index" placeholder="1" />
+                          @if (editExerciseForm.controls.order_index.touched && editExerciseForm.controls.order_index.invalid) {
+                            <small class="field-error">El orden debe ser mayor que 0</small>
+                          }
                         </div>
                       </div>
                       <div class="mini-grid mini-grid-intensity">
                         <div class="field">
                           <label [for]="'edit-exercise-rir-' + exercise.id">RIR</label>
                           <input [id]="'edit-exercise-rir-' + exercise.id" type="number" formControlName="rir" placeholder="0-10" />
+                          @if (editExerciseForm.controls.rir.touched && editExerciseForm.controls.rir.invalid) {
+                            <small class="field-error">RIR debe estar entre 0 y 10</small>
+                          }
                         </div>
                         <div class="field">
                           <label [for]="'edit-exercise-rm-' + exercise.id">Porcentaje RM</label>
                           <input [id]="'edit-exercise-rm-' + exercise.id" type="number" formControlName="rm_percent" placeholder="1-100" />
+                          @if (editExerciseForm.controls.rm_percent.touched && editExerciseForm.controls.rm_percent.invalid) {
+                            <small class="field-error">%RM debe estar entre 1 y 100</small>
+                          }
                         </div>
                       </div>
                       <div class="row-actions">
@@ -297,29 +341,47 @@
             <div class="field">
               <label for="new-exercise-name">Nombre</label>
               <input id="new-exercise-name" type="text" placeholder="Ej. Press banca" formControlName="name" />
+              @if (createExerciseForm.controls.name.touched && createExerciseForm.controls.name.invalid) {
+                <small class="field-error">El nombre es obligatorio</small>
+              }
             </div>
             <div class="mini-grid mini-grid-main">
               <div class="field">
                 <label for="new-exercise-sets">Series</label>
                 <input id="new-exercise-sets" type="number" placeholder="3" formControlName="sets" />
+                @if (createExerciseForm.controls.sets.touched && createExerciseForm.controls.sets.invalid) {
+                  <small class="field-error">Series debe ser mayor que 0</small>
+                }
               </div>
               <div class="field">
                 <label for="new-exercise-reps">Repeticiones</label>
                 <input id="new-exercise-reps" type="number" placeholder="10" formControlName="reps" />
+                @if (createExerciseForm.controls.reps.touched && createExerciseForm.controls.reps.invalid) {
+                  <small class="field-error">Repeticiones debe ser mayor que 0</small>
+                }
               </div>
               <div class="field">
                 <label for="new-exercise-order">Orden</label>
                 <input id="new-exercise-order" type="number" placeholder="1" formControlName="order_index" />
+                @if (createExerciseForm.controls.order_index.touched && createExerciseForm.controls.order_index.invalid) {
+                  <small class="field-error">El orden debe ser mayor que 0</small>
+                }
               </div>
             </div>
             <div class="mini-grid mini-grid-intensity">
               <div class="field">
                 <label for="new-exercise-rir">RIR</label>
                 <input id="new-exercise-rir" type="number" placeholder="0-10" formControlName="rir" />
+                @if (createExerciseForm.controls.rir.touched && createExerciseForm.controls.rir.invalid) {
+                  <small class="field-error">RIR debe estar entre 0 y 10</small>
+                }
               </div>
               <div class="field">
                 <label for="new-exercise-rm">Porcentaje RM</label>
                 <input id="new-exercise-rm" type="number" placeholder="1-100" formControlName="rm_percent" />
+                @if (createExerciseForm.controls.rm_percent.touched && createExerciseForm.controls.rm_percent.invalid) {
+                  <small class="field-error">%RM debe estar entre 1 y 100</small>
+                }
               </div>
             </div>
             <button type="submit" [disabled]="!selectedWorkoutId">Crear ejercicio</button>
@@ -341,12 +403,18 @@
           <div>
             <label for="edit-name">Nombre</label>
             <input id="edit-name" type="text" formControlName="name" placeholder="Nombre" />
+            @if (editEntityForm.controls.name.touched && editEntityForm.controls.name.invalid) {
+              <small class="field-error">El nombre es obligatorio</small>
+            }
           </div>
 
           @if (editModalType === 'client') {
             <div>
               <label for="edit-email">Email</label>
               <input id="edit-email" type="email" formControlName="email" placeholder="Email" />
+              @if (editEntityForm.controls.email.touched && editEntityForm.controls.email.hasError('email')) {
+                <small class="field-error">Formato de email inválido</small>
+              }
             </div>
 
             <div>

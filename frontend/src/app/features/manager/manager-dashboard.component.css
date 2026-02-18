@@ -220,6 +220,12 @@
   gap: 0.28rem;
 }
 
+.field-error {
+  color: #be123c;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .action-btn {
   border-radius: 999px;
   min-height: 34px;

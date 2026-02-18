@@ -1,302 +1,318 @@
-const Database = require('better-sqlite3');
+const { db } = require('./db');
+const { parsePositiveInt, isSqliteUniqueError } = require('../utils/data.helpers');
 
+function parseNullableIntInRange(value, min, max) {
+  if (value === undefined) {
+    return { present: false, value: null };
+  }
 
-const db = new Database('trainlog.db');
+  if (value === null || value === '') {
+    return { present: true, value: null };
+  }
 
-// Crear tabla si no existe
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS workout_exercises (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    sets INTEGER NOT NULL,
-    reps INTEGER NOT NULL,
-    order_index INTEGER NOT NULL,
-    workout_id INTEGER NOT NULL,
-    FOREIGN KEY (workout_id) REFERENCES workouts(id),
-    UNIQUE (workout_id, order_index)
-    )
-`).run();
+  const parsed = Number(value);
+
+  if (!Number.isInteger(parsed) || parsed < min || parsed > max) {
+    return { present: true, error: true };
+  }
+
+  return { present: true, value: parsed };
+}
 
 function addExercise(data, managerId) {
-    const { name, sets, reps, order_index: order, workoutId } = data
+  const name = data?.name?.trim();
+  const sets = parsePositiveInt(data?.sets);
+  const reps = parsePositiveInt(data?.reps);
+  const order = parsePositiveInt(data?.order_index);
+  const workoutId = parsePositiveInt(data?.workoutId);
+  const rir = parseNullableIntInRange(data?.rir, 0, 10);
+  const rmPercent = parseNullableIntInRange(data?.rm_percent, 1, 100);
 
-    if (!name || !name.trim() || sets == null || reps == null || order == null || !workoutId) {
-        return {
-            status: 400,
-            error: 'Falta algún campo'
-        };
+  if (!name || !sets || !reps || !order || !workoutId) {
+    return {
+      status: 400,
+      error: 'Falta algún campo o tiene formato inválido'
     };
+  }
 
-    // Preparamos la query
-    const stmt = db.prepare(`
-            SELECT id FROM workouts
-            WHERE id = ? AND manager_id = ?
-        `);
-
-    const result = stmt.get(workoutId, managerId);
-
-    if (!result) {
-        return {
-            status: 403,
-            error: 'Este entrenamiento no pertenece al manager'
-        };
+  if (rir.error) {
+    return {
+      status: 400,
+      error: 'RIR inválido (0-10)'
     };
+  }
 
-    try {
-        const stmt = db.prepare(`
-            INSERT INTO workout_exercises (name, sets, reps, order_index, workout_id)
-            VALUES (?, ?, ?, ?, ?)
-        `);
-
-        const result = stmt.run(name, sets, reps, order, workoutId);
-
-        return {
-            message: 'Ejercicio creado',
-            id: result.lastInsertRowid
-        };
-
-    } catch (error) {
-        console.error(error);
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return {
-                status: 409,
-                error: "El orden debe ser único por workout"
-            };
-        };
-
-        return {
-            status: 500,
-            error: 'Error interno'
-        };
+  if (rmPercent.error) {
+    return {
+      status: 400,
+      error: '%RM inválido (1-100)'
     };
-};
+  }
+
+  const workout = db
+    .prepare('SELECT id FROM workouts WHERE id = ? AND manager_id = ?')
+    .get(workoutId, managerId);
+
+  if (!workout) {
+    return {
+      status: 403,
+      error: 'Este entrenamiento no pertenece al manager'
+    };
+  }
+
+  try {
+    const result = db
+      .prepare(`
+        INSERT INTO workout_exercises
+        (name, sets, reps, rir, rm_percent, order_index, workout_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(name, sets, reps, rir.value, rmPercent.value, order, workoutId);
+
+    return {
+      message: 'Ejercicio creado',
+      id: result.lastInsertRowid
+    };
+  } catch (error) {
+    if (isSqliteUniqueError(error)) {
+      return {
+        status: 409,
+        error: 'El orden debe ser único por workout'
+      };
+    }
+
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
 
 function getExercises(workoutId, managerId) {
+  const id = parsePositiveInt(workoutId);
 
-    if (!workoutId) {
-        return {
-            status: 400,
-            error: 'Falta workoutId'
-        };
+  if (!id) {
+    return {
+      status: 400,
+      error: 'Falta workoutId válido'
     };
+  }
 
-    // Preparamos la query
-    const stmt = db.prepare(`
-            SELECT id FROM workouts
-            WHERE id = ? AND manager_id = ?
-        `);
+  const ownership = db
+    .prepare('SELECT id FROM workouts WHERE id = ? AND manager_id = ?')
+    .get(id, managerId);
 
-    const ownership = stmt.get(workoutId, managerId);
-
-    if (!ownership) {
-        return {
-            status: 403,
-            error: 'Este entrenamiento no pertenece al manager'
-        };
+  if (!ownership) {
+    return {
+      status: 403,
+      error: 'Este entrenamiento no pertenece al manager'
     };
+  }
 
-    try {
-        const stmt = db.prepare(`
-            SELECT * FROM workout_exercises
-            WHERE workout_id = ?
-            ORDER BY order_index
-        `);
-
-        const result = stmt.all(workoutId);
-
-        return result
-
-    } catch (error) {
-
-        console.error(error);
-        return {
-            status: 500,
-            message: 'Error interno'
-        }
-    }
+  try {
+    return db
+      .prepare('SELECT * FROM workout_exercises WHERE workout_id = ? ORDER BY order_index')
+      .all(id);
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
 }
 
 function deleteExercise(exerciseId, managerId) {
+  const id = parsePositiveInt(exerciseId);
 
-    const id = Number(exerciseId);
+  if (!id) {
+    return {
+      status: 400,
+      error: 'Id inválido'
+    };
+  }
 
-    if (!id) {
-        return {
-            status: 400,
-            error: 'Id inválido'
-        };
-    }
+  const ownership = db
+    .prepare(`
+      SELECT we.id
+      FROM workout_exercises we
+      JOIN workouts w ON we.workout_id = w.id
+      WHERE we.id = ? AND w.manager_id = ?
+    `)
+    .get(id, managerId);
 
-    // 1. Validar ownership
-    const ownershipStmt = db.prepare(`
-        SELECT we.id
-        FROM workout_exercises we
-        JOIN workouts w ON we.workout_id = w.id
-        WHERE we.id = ?
-        AND w.manager_id = ?
-    `);
+  if (!ownership) {
+    return {
+      status: 403,
+      error: 'Este ejercicio no pertenece a este manager'
+    };
+  }
 
-    const ownership = ownershipStmt.get(id, managerId);
+  try {
+    const result = db.prepare('DELETE FROM workout_exercises WHERE id = ?').run(id);
 
-    if (!ownership) {
-        return {
-            status: 403,
-            error: 'Este ejercicio no pertenece a este manager'
-        };
-    }
-
-    try {
-        // 2. Borrar ejercicio
-        const deleteStmt = db.prepare(`
-            DELETE FROM workout_exercises
-            WHERE id = ?
-        `);
-
-        const result = deleteStmt.run(id);
-
-        return {
-            message: 'Ejercicio eliminado',
-            changes: result.changes
-        };
-
-    } catch (error) {
-        console.error(error);
-        return {
-            status: 500,
-            error: 'Error interno'
-        };
-    }
-};
+    return {
+      message: 'Ejercicio eliminado',
+      changes: result.changes
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
 
 function updateExercise(exerciseId, data, managerId) {
-    const id = Number(exerciseId);
+  const id = parsePositiveInt(exerciseId);
 
-    if (!id) {
-        return {
-            status: 400,
-            error: 'Id inválido'
-        };
-    }
-
-    // 1. Validar ownership
-    const ownershipStmt = db.prepare(`
-        SELECT we.id
-        FROM workout_exercises we
-        JOIN workouts w ON we.workout_id = w.id
-        WHERE we.id = ?
-        AND w.manager_id = ?
-    `);
-
-    const ownership = ownershipStmt.get(id, managerId);
-
-    if (!ownership) {
-        return {
-            status: 403,
-            error: 'Este ejercicio no pertenece a este manager'
-        };
-    }
-
-    const updates = [];
-    const values = [];
-
-    if (data.name !== undefined) {
-        if (!data.name || !data.name.trim()) {
-            return {
-                status: 400,
-                error: 'Nombre inválido'
-            };
-        }
-
-        updates.push('name = ?');
-        values.push(data.name.trim());
-    }
-
-    if (data.sets !== undefined) {
-        const sets = Number(data.sets);
-
-        if (!Number.isInteger(sets) || sets <= 0) {
-            return {
-                status: 400,
-                error: 'Sets inválido'
-            };
-        }
-
-        updates.push('sets = ?');
-        values.push(sets);
-    }
-
-    if (data.reps !== undefined) {
-        const reps = Number(data.reps);
-
-        if (!Number.isInteger(reps) || reps <= 0) {
-            return {
-                status: 400,
-                error: 'Reps inválido'
-            };
-        }
-
-        updates.push('reps = ?');
-        values.push(reps);
-    }
-
-    if (data.order_index !== undefined) {
-        const order = Number(data.order_index);
-
-        if (!Number.isInteger(order) || order <= 0) {
-            return {
-                status: 400,
-                error: 'Order inválido'
-            };
-        }
-
-        updates.push('order_index = ?');
-        values.push(order);
-    }
-
-    if (updates.length === 0) {
-        return {
-            status: 400,
-            error: 'No hay campos para actualizar'
-        };
-    }
-
-    try {
-        const stmt = db.prepare(`
-            UPDATE workout_exercises
-            SET ${updates.join(', ')}
-            WHERE id = ?
-        `);
-
-        stmt.run(...values, id);
-
-        const selectStmt = db.prepare(`
-            SELECT *
-            FROM workout_exercises
-            WHERE id = ?
-        `);
-
-        const exercise = selectStmt.get(id);
-
-        return {
-            message: 'Ejercicio actualizado',
-            data: exercise
-        };
-
-    } catch (error) {
-        console.error(error);
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return {
-                status: 409,
-                error: "El orden debe ser único por workout"
-            };
-        };
-
-        return {
-            status: 500,
-            error: 'Error interno'
-        };
+  if (!id) {
+    return {
+      status: 400,
+      error: 'Id inválido'
     };
+  }
+
+  const ownership = db
+    .prepare(`
+      SELECT we.id
+      FROM workout_exercises we
+      JOIN workouts w ON we.workout_id = w.id
+      WHERE we.id = ? AND w.manager_id = ?
+    `)
+    .get(id, managerId);
+
+  if (!ownership) {
+    return {
+      status: 403,
+      error: 'Este ejercicio no pertenece a este manager'
+    };
+  }
+
+  const updates = [];
+  const values = [];
+
+  if (data?.name !== undefined) {
+    const name = data.name?.trim();
+
+    if (!name) {
+      return {
+        status: 400,
+        error: 'Nombre inválido'
+      };
+    }
+
+    updates.push('name = ?');
+    values.push(name);
+  }
+
+  if (data?.sets !== undefined) {
+    const sets = parsePositiveInt(data.sets);
+
+    if (!sets) {
+      return {
+        status: 400,
+        error: 'Sets inválido'
+      };
+    }
+
+    updates.push('sets = ?');
+    values.push(sets);
+  }
+
+  if (data?.reps !== undefined) {
+    const reps = parsePositiveInt(data.reps);
+
+    if (!reps) {
+      return {
+        status: 400,
+        error: 'Reps inválido'
+      };
+    }
+
+    updates.push('reps = ?');
+    values.push(reps);
+  }
+
+  if (data?.order_index !== undefined) {
+    const order = parsePositiveInt(data.order_index);
+
+    if (!order) {
+      return {
+        status: 400,
+        error: 'Order inválido'
+      };
+    }
+
+    updates.push('order_index = ?');
+    values.push(order);
+  }
+
+  if (data?.rir !== undefined) {
+    const rir = parseNullableIntInRange(data.rir, 0, 10);
+
+    if (rir.error) {
+      return {
+        status: 400,
+        error: 'RIR inválido (0-10)'
+      };
+    }
+
+    updates.push('rir = ?');
+    values.push(rir.value);
+  }
+
+  if (data?.rm_percent !== undefined) {
+    const rmPercent = parseNullableIntInRange(data.rm_percent, 1, 100);
+
+    if (rmPercent.error) {
+      return {
+        status: 400,
+        error: '%RM inválido (1-100)'
+      };
+    }
+
+    updates.push('rm_percent = ?');
+    values.push(rmPercent.value);
+  }
+
+  if (updates.length === 0) {
+    return {
+      status: 400,
+      error: 'No hay campos para actualizar'
+    };
+  }
+
+  try {
+    db.prepare(`UPDATE workout_exercises SET ${updates.join(', ')} WHERE id = ?`).run(...values, id);
+
+    const exercise = db.prepare('SELECT * FROM workout_exercises WHERE id = ?').get(id);
+
+    return {
+      message: 'Ejercicio actualizado',
+      data: exercise
+    };
+  } catch (error) {
+    if (isSqliteUniqueError(error)) {
+      return {
+        status: 409,
+        error: 'El orden debe ser único por workout'
+      };
+    }
+
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
+
+module.exports = {
+  addExercise,
+  getExercises,
+  deleteExercise,
+  updateExercise
 };
-
-
-module.exports = { addExercise, getExercises, deleteExercise, updateExercise }

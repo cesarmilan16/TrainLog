@@ -1,23 +1,118 @@
 .login-wrap {
   min-height: 100vh;
+  width: 100%;
   display: grid;
   place-items: center;
+  padding-block: 1.5rem;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+}
+
+.login-wrap::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(120deg, rgba(5, 16, 26, 0.68), rgba(6, 26, 38, 0.42)),
+    url('/login-bg.png') center/cover no-repeat,
+    linear-gradient(135deg, #0a3446, #116a68);
+  z-index: -2;
+}
+
+.login-wrap::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(7, 18, 27, 0.2), rgba(7, 18, 27, 0.52));
+  z-index: -1;
+}
+
+.login-grid {
+  width: min(1000px, 100%);
+  padding-inline: min(2.5vw, 1rem);
+  display: grid;
+  grid-template-columns: 1.1fr 0.9fr;
+  gap: 1rem;
+}
+
+.login-info {
+  display: grid;
+  align-content: start;
+  gap: 0.9rem;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.94), rgba(242, 250, 255, 0.92));
+  backdrop-filter: blur(2px);
+}
+
+.login-info h1 {
+  font-size: clamp(1.4rem, 2.2vw, 2rem);
+  line-height: 1.1;
+}
+
+.demo-box {
+  margin-top: 0.4rem;
+  border: 1px solid var(--border);
+  background: var(--panel-soft);
+  border-radius: 12px;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.demo-box p {
+  margin: 0.25rem 0;
 }
 
 .login-card {
-  width: min(420px, 100%);
-  padding: 1.4rem;
+  width: 100%;
+  max-width: 430px;
+  justify-self: end;
+  padding: 1.3rem;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(247, 252, 255, 0.94));
+  backdrop-filter: blur(2px);
 }
 
 .eyebrow {
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  font-weight: 700;
-  color: var(--brand-2);
+  font-weight: 800;
+  color: #0b7285;
   margin: 0;
+  font-size: 0.74rem;
 }
 
-h1 {
-  margin-top: 0.4rem;
-  margin-bottom: 0.5rem;
+h2 {
+  margin-top: 0.35rem;
+  margin-bottom: 1rem;
+}
+
+@media (max-width: 900px) {
+  .login-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .login-card {
+    justify-self: stretch;
+    max-width: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .login-wrap {
+    min-height: auto;
+    padding-block: 0.9rem 1.3rem;
+  }
+
+  .login-info {
+    gap: 0.65rem;
+    padding: 0.85rem;
+  }
+
+  .demo-box {
+    font-size: 0.84rem;
+    padding: 0.65rem;
+  }
+
+  .login-card {
+    padding: 1rem;
+  }
 }

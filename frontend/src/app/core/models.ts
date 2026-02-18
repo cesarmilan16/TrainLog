@@ -36,6 +36,8 @@ export interface Exercise {
   name: string;
   sets: number;
   reps: number;
+  rir: number | null;
+  rm_percent: number | null;
   order_index: number;
   workout_id: number;
 }
@@ -52,6 +54,8 @@ export interface DashboardExercise {
   name: string;
   sets: number;
   reps: number;
+  rir: number | null;
+  rm_percent: number | null;
   order_index: number;
   last_log: ExerciseLog | null;
 }

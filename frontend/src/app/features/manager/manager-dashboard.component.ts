@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -11,11 +10,18 @@ import { Exercise, ManagerClient, Workout } from '../../core/models';
 @Component({
   selector: 'app-manager-dashboard',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './manager-dashboard.component.html',
-  styleUrl: './manager-dashboard.component.css'
+  styleUrl: './manager-dashboard.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class ManagerDashboardComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly managerService = inject(ManagerService);
+  private readonly router = inject(Router);
+  private readonly cdr = inject(ChangeDetectorRef);
+
   clients: ManagerClient[] = [];
   workouts: Workout[] = [];
   exercises: Exercise[] = [];
@@ -24,44 +30,68 @@ export class ManagerDashboardComponent implements OnInit {
   selectedWorkoutId: number | null = null;
   editingExerciseId: number | null = null;
 
+  openClientMenuId: number | null = null;
+  openWorkoutMenuId: number | null = null;
+
   loadingClients = false;
   loadingWorkouts = false;
   loadingExercises = false;
   errorMessage = '';
 
-  readonly createClientForm = this.fb.group({
+  editModalOpen = false;
+  editModalTitle = '';
+  editModalType: 'client' | 'workout' | null = null;
+  editTargetId: number | null = null;
+  confirmModalOpen = false;
+  confirmModalTitle = '';
+  confirmModalMessage = '';
+  confirmModalType: 'client' | 'workout' | null = null;
+  confirmTargetId: number | null = null;
+
+  readonly createClientForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required, Validators.minLength(4)]]
   });
 
-  readonly createWorkoutForm = this.fb.group({
+  readonly createWorkoutForm = this.fb.nonNullable.group({
     name: ['', Validators.required]
   });
 
   readonly createExerciseForm = this.fb.group({
     name: ['', Validators.required],
-    sets: [3, [Validators.required, Validators.min(1)]],
-    reps: [10, [Validators.required, Validators.min(1)]],
-    order_index: [1, [Validators.required, Validators.min(1)]]
+    sets: [null as number | null, [Validators.required, Validators.min(1)]],
+    reps: [null as number | null, [Validators.required, Validators.min(1)]],
+    rir: [null as number | null, [Validators.min(0), Validators.max(10)]],
+    rm_percent: [null as number | null, [Validators.min(1), Validators.max(100)]],
+    order_index: [null as number | null, [Validators.required, Validators.min(1)]]
   });
 
   readonly editExerciseForm = this.fb.group({
     name: ['', Validators.required],
-    sets: [1, [Validators.required, Validators.min(1)]],
-    reps: [1, [Validators.required, Validators.min(1)]],
-    order_index: [1, [Validators.required, Validators.min(1)]]
+    sets: [null as number | null, [Validators.required, Validators.min(1)]],
+    reps: [null as number | null, [Validators.required, Validators.min(1)]],
+    rir: [null as number | null, [Validators.min(0), Validators.max(10)]],
+    rm_percent: [null as number | null, [Validators.min(1), Validators.max(100)]],
+    order_index: [null as number | null, [Validators.required, Validators.min(1)]]
   });
 
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly authService: AuthService,
-    private readonly managerService: ManagerService,
-    private readonly router: Router
-  ) {}
+  readonly editEntityForm = this.fb.nonNullable.group({
+    name: ['', Validators.required],
+    email: [''],
+    password: ['']
+  });
 
   ngOnInit(): void {
     this.fetchClients();
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapePressed(): void {
+    this.closeMenus();
+    this.closeEditModal();
+    this.closeConfirmModal();
+    this.cdr.markForCheck();
   }
 
   fetchClients(): void {
@@ -72,10 +102,12 @@ export class ManagerDashboardComponent implements OnInit {
       next: (clients) => {
         this.loadingClients = false;
         this.clients = clients;
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.loadingClients = false;
         this.errorMessage = error.error?.message ?? 'No se pudieron cargar los clientes';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -88,13 +120,15 @@ export class ManagerDashboardComponent implements OnInit {
 
     this.errorMessage = '';
 
-    this.managerService.createClient(this.createClientForm.getRawValue() as { email: string; password: string; name: string }).subscribe({
+    this.managerService.createClient(this.createClientForm.getRawValue()).subscribe({
       next: () => {
         this.createClientForm.reset({ name: '', email: '', password: '' });
         this.fetchClients();
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = error.error?.message ?? 'No se pudo crear el cliente';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -104,7 +138,183 @@ export class ManagerDashboardComponent implements OnInit {
     this.selectedWorkoutId = null;
     this.workouts = [];
     this.exercises = [];
+    this.closeMenus();
     this.fetchWorkouts(clientId);
+  }
+
+  openClientMenu(clientId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.openWorkoutMenuId = null;
+    this.openClientMenuId = this.openClientMenuId === clientId ? null : clientId;
+    this.cdr.markForCheck();
+  }
+
+  openWorkoutMenu(workoutId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.openClientMenuId = null;
+    this.openWorkoutMenuId = this.openWorkoutMenuId === workoutId ? null : workoutId;
+    this.cdr.markForCheck();
+  }
+
+  closeMenus(): void {
+    this.openClientMenuId = null;
+    this.openWorkoutMenuId = null;
+  }
+
+  openEditClientModal(client: ManagerClient): void {
+    this.editModalOpen = true;
+    this.editModalType = 'client';
+    this.editTargetId = client.id;
+    this.editModalTitle = 'Editar cliente';
+    this.editEntityForm.reset({
+      name: client.name,
+      email: client.email,
+      password: ''
+    });
+    this.closeMenus();
+    this.cdr.markForCheck();
+  }
+
+  openEditWorkoutModal(workout: Workout): void {
+    this.editModalOpen = true;
+    this.editModalType = 'workout';
+    this.editTargetId = workout.id;
+    this.editModalTitle = 'Editar entrenamiento';
+    this.editEntityForm.reset({
+      name: workout.name,
+      email: '',
+      password: ''
+    });
+    this.closeMenus();
+    this.cdr.markForCheck();
+  }
+
+  closeEditModal(): void {
+    this.editModalOpen = false;
+    this.editModalType = null;
+    this.editTargetId = null;
+    this.editEntityForm.reset({ name: '', email: '', password: '' });
+    this.cdr.markForCheck();
+  }
+
+  openDeleteClientConfirm(clientId: number): void {
+    this.confirmModalOpen = true;
+    this.confirmModalType = 'client';
+    this.confirmTargetId = clientId;
+    this.confirmModalTitle = 'Eliminar cliente';
+    this.confirmModalMessage = 'Esto eliminará también sus entrenamientos y logs. Esta acción no se puede deshacer.';
+    this.closeMenus();
+    this.cdr.markForCheck();
+  }
+
+  openDeleteWorkoutConfirm(workoutId: number): void {
+    this.confirmModalOpen = true;
+    this.confirmModalType = 'workout';
+    this.confirmTargetId = workoutId;
+    this.confirmModalTitle = 'Eliminar entrenamiento';
+    this.confirmModalMessage = 'Se eliminarán también sus ejercicios asociados. Esta acción no se puede deshacer.';
+    this.closeMenus();
+    this.cdr.markForCheck();
+  }
+
+  closeConfirmModal(): void {
+    this.confirmModalOpen = false;
+    this.confirmModalType = null;
+    this.confirmTargetId = null;
+    this.confirmModalTitle = '';
+    this.confirmModalMessage = '';
+  }
+
+  confirmDelete(): void {
+    if (!this.confirmModalType || !this.confirmTargetId) {
+      return;
+    }
+
+    if (this.confirmModalType === 'client') {
+      this.deleteClient(this.confirmTargetId);
+      return;
+    }
+
+    this.deleteWorkout(this.confirmTargetId);
+  }
+
+  submitEditModal(): void {
+    if (!this.editModalType || !this.editTargetId) {
+      return;
+    }
+
+    const targetId = this.editTargetId;
+    const name = this.editEntityForm.getRawValue().name.trim();
+
+    if (!name) {
+      this.errorMessage = 'El nombre es obligatorio';
+      this.cdr.markForCheck();
+      return;
+    }
+
+    if (this.editModalType === 'client') {
+      const payload: { name?: string; email?: string; password?: string } = {
+        name,
+        email: this.editEntityForm.getRawValue().email.trim()
+      };
+
+      const password = this.editEntityForm.getRawValue().password.trim();
+      if (password) {
+        payload.password = password;
+      }
+
+      this.managerService.updateClient(targetId, payload).subscribe({
+        next: () => {
+          this.fetchClients();
+
+          if (this.selectedClientId === targetId) {
+            this.fetchWorkouts(targetId);
+          }
+
+          this.closeEditModal();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage = error.error?.message ?? 'No se pudo editar el cliente';
+          this.cdr.markForCheck();
+        }
+      });
+      return;
+    }
+
+    this.managerService.updateWorkout(targetId, { name }).subscribe({
+      next: () => {
+        if (this.selectedClientId) {
+          this.fetchWorkouts(this.selectedClientId);
+        }
+
+        this.closeEditModal();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage = error.error?.message ?? 'No se pudo editar el entrenamiento';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  deleteClient(clientId: number): void {
+    this.managerService.deleteClient(clientId).subscribe({
+      next: () => {
+        if (this.selectedClientId === clientId) {
+          this.selectedClientId = null;
+          this.selectedWorkoutId = null;
+          this.workouts = [];
+          this.exercises = [];
+        }
+
+        this.fetchClients();
+        this.closeConfirmModal();
+        this.cdr.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.errorMessage = error.error?.message ?? 'No se pudo eliminar el cliente';
+        this.cdr.markForCheck();
+      }
+    });
   }
 
   fetchWorkouts(userId: number): void {
@@ -115,11 +325,13 @@ export class ManagerDashboardComponent implements OnInit {
       next: (workouts) => {
         this.loadingWorkouts = false;
         this.workouts = workouts;
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.loadingWorkouts = false;
         this.workouts = [];
         this.errorMessage = error.error?.message ?? 'No se pudieron cargar los entrenamientos';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -130,18 +342,40 @@ export class ManagerDashboardComponent implements OnInit {
       return;
     }
 
-    const payload = {
-      name: this.createWorkoutForm.getRawValue().name ?? '',
-      userId: this.selectedClientId
-    };
+    this.managerService
+      .createWorkout({ name: this.createWorkoutForm.getRawValue().name, userId: this.selectedClientId })
+      .subscribe({
+        next: () => {
+          this.createWorkoutForm.reset({ name: '' });
+          this.fetchWorkouts(this.selectedClientId as number);
+          this.cdr.markForCheck();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage = error.error?.message ?? 'No se pudo crear el entrenamiento';
+          this.cdr.markForCheck();
+        }
+      });
+  }
 
-    this.managerService.createWorkout(payload).subscribe({
+  deleteWorkout(workoutId: number): void {
+    if (!this.selectedClientId) {
+      return;
+    }
+
+    this.managerService.deleteWorkout(workoutId).subscribe({
       next: () => {
-        this.createWorkoutForm.reset({ name: '' });
+        if (this.selectedWorkoutId === workoutId) {
+          this.selectedWorkoutId = null;
+          this.exercises = [];
+        }
+
         this.fetchWorkouts(this.selectedClientId as number);
+        this.closeConfirmModal();
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
-        this.errorMessage = error.error?.message ?? 'No se pudo crear el entrenamiento';
+        this.errorMessage = error.error?.message ?? 'No se pudo eliminar el entrenamiento';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -149,6 +383,7 @@ export class ManagerDashboardComponent implements OnInit {
   selectWorkout(workoutId: number): void {
     this.selectedWorkoutId = workoutId;
     this.editingExerciseId = null;
+    this.closeMenus();
     this.fetchExercises(workoutId);
   }
 
@@ -160,11 +395,13 @@ export class ManagerDashboardComponent implements OnInit {
       next: (exercises) => {
         this.loadingExercises = false;
         this.exercises = exercises;
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.loadingExercises = false;
         this.exercises = [];
         this.errorMessage = error.error?.message ?? 'No se pudieron cargar los ejercicios';
+        this.cdr.markForCheck();
       }
     });
   }
@@ -175,23 +412,34 @@ export class ManagerDashboardComponent implements OnInit {
       return;
     }
 
-    const formValue = this.createExerciseForm.getRawValue();
-
-    this.managerService.createExercise({
-      name: formValue.name ?? '',
-      sets: Number(formValue.sets),
-      reps: Number(formValue.reps),
-      order_index: Number(formValue.order_index),
-      workoutId: this.selectedWorkoutId
-    }).subscribe({
-      next: () => {
-        this.createExerciseForm.reset({ name: '', sets: 3, reps: 10, order_index: 1 });
-        this.fetchExercises(this.selectedWorkoutId as number);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = error.error?.message ?? 'No se pudo crear el ejercicio';
-      }
-    });
+    this.managerService
+      .createExercise({
+        name: this.createExerciseForm.getRawValue().name ?? '',
+        sets: Number(this.createExerciseForm.getRawValue().sets),
+        reps: Number(this.createExerciseForm.getRawValue().reps),
+        rir: this.createExerciseForm.getRawValue().rir ?? null,
+        rm_percent: this.createExerciseForm.getRawValue().rm_percent ?? null,
+        order_index: Number(this.createExerciseForm.getRawValue().order_index),
+        workoutId: this.selectedWorkoutId
+      })
+      .subscribe({
+        next: () => {
+          this.createExerciseForm.reset({
+            name: '',
+            sets: null,
+            reps: null,
+            rir: null,
+            rm_percent: null,
+            order_index: null
+          });
+          this.fetchExercises(this.selectedWorkoutId as number);
+          this.cdr.markForCheck();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage = error.error?.message ?? 'No se pudo crear el ejercicio';
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   startEdit(exercise: Exercise): void {
@@ -200,6 +448,8 @@ export class ManagerDashboardComponent implements OnInit {
       name: exercise.name,
       sets: exercise.sets,
       reps: exercise.reps,
+      rir: exercise.rir,
+      rm_percent: exercise.rm_percent,
       order_index: exercise.order_index
     });
   }
@@ -214,22 +464,26 @@ export class ManagerDashboardComponent implements OnInit {
       return;
     }
 
-    const formValue = this.editExerciseForm.getRawValue();
-
-    this.managerService.updateExercise(exerciseId, {
-      name: formValue.name ?? '',
-      sets: Number(formValue.sets),
-      reps: Number(formValue.reps),
-      order_index: Number(formValue.order_index)
-    }).subscribe({
-      next: () => {
-        this.editingExerciseId = null;
-        this.fetchExercises(this.selectedWorkoutId as number);
-      },
-      error: (error: HttpErrorResponse) => {
-        this.errorMessage = error.error?.message ?? 'No se pudo editar el ejercicio';
-      }
-    });
+    this.managerService
+      .updateExercise(exerciseId, {
+        name: this.editExerciseForm.getRawValue().name ?? '',
+        sets: Number(this.editExerciseForm.getRawValue().sets),
+        reps: Number(this.editExerciseForm.getRawValue().reps),
+        rir: this.editExerciseForm.getRawValue().rir ?? null,
+        rm_percent: this.editExerciseForm.getRawValue().rm_percent ?? null,
+        order_index: Number(this.editExerciseForm.getRawValue().order_index)
+      })
+      .subscribe({
+        next: () => {
+          this.editingExerciseId = null;
+          this.fetchExercises(this.selectedWorkoutId as number);
+          this.cdr.markForCheck();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage = error.error?.message ?? 'No se pudo editar el ejercicio';
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   deleteExercise(exerciseId: number): void {
@@ -240,9 +494,11 @@ export class ManagerDashboardComponent implements OnInit {
     this.managerService.deleteExercise(exerciseId).subscribe({
       next: () => {
         this.fetchExercises(this.selectedWorkoutId as number);
+        this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = error.error?.message ?? 'No se pudo eliminar el ejercicio';
+        this.cdr.markForCheck();
       }
     });
   }

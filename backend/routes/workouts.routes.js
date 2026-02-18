@@ -1,91 +1,53 @@
 const express = require('express');
+
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
-const { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard, getManagerDashboard } = require('../data/workouts.data');
+const {
+  newWorkout,
+  getMyWorkouts,
+  getWorkoutsManager,
+  getUserDashboard,
+  getManagerDashboard,
+  deleteWorkout,
+  updateWorkout
+} = require('../data/workouts.data');
+const { handleResult } = require('../utils/respond');
 
 const router = express.Router();
 
-//Crear entrenamiento
 router.post('/', auth, authorize('MANAGER'), (req, res) => {
-    const result = newWorkout(req.body, req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    };
-
-    res.status(201).json({
-        message: result.message,
-        id: result.id
-    });
+  const result = newWorkout(req.body, req.user.id);
+  return handleResult(res, result, (data) => ({ message: data.message, id: data.id }), 201);
 });
 
-//Obtener entrenamientos del usuario
 router.get('/my', auth, authorize('USER'), (req, res) => {
-    const result = getMyWorkouts(req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    };
-
-    res.status(200).json({
-        message: "Entrenamientos del usuario",
-        data: result
-    });
+  const result = getMyWorkouts(req.user.id);
+  return handleResult(res, result, (data) => ({ message: 'Entrenamientos del usuario', data }));
 });
 
 router.get('/user/:userId', auth, authorize('MANAGER'), (req, res) => {
-    const result = getWorkoutsManager(req.params.userId, req.user.id);    
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    };
-
-    res.status(200).json({
-        message: "Entrenamientos del manager",
-        data: result
-    });
+  const result = getWorkoutsManager(req.params.userId, req.user.id);
+  return handleResult(res, result, (data) => ({ message: 'Entrenamientos del manager', data }));
 });
 
 router.get('/dashboard', auth, authorize('USER'), (req, res) => {
-    const result = getUserDashboard(req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    };
-
-    res.status(200).json({
-        data: result
-    });
+  const result = getUserDashboard(req.user.id);
+  return handleResult(res, result, (data) => ({ data }));
 });
 
 router.get('/manager/:userId/dashboard', auth, authorize('MANAGER'), (req, res) => {
-    const result = getManagerDashboard(req.params.userId, req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    };
-
-    res.status(200).json({
-        data: result
-    });
+  const result = getManagerDashboard(req.params.userId, req.user.id);
+  return handleResult(res, result, (data) => ({ data }));
 });
 
-// Ruta para eliminar
+router.delete('/:workoutId', auth, authorize('MANAGER'), (req, res) => {
+  const result = deleteWorkout(req.params.workoutId, req.user.id);
+  return handleResult(res, result, (data) => ({ data }));
+});
 
+router.put('/:workoutId', auth, authorize('MANAGER'), (req, res) => {
+  const result = updateWorkout(req.params.workoutId, req.body, req.user.id);
+  return handleResult(res, result, (data) => ({ message: data.message, data: data.data }));
+});
 
 module.exports = router;

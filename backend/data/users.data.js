@@ -1,206 +1,276 @@
-const Database = require('better-sqlite3');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
+const { db } = require('./db');
+const { parsePositiveInt, isSqliteUniqueError } = require('../utils/data.helpers');
 
-const db = new Database('trainlog.db');
 const JWT_SECRET = process.env.JWT_SECRET;
 
-
-// Crear tabla si no existe
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    password TEXT NOT NULL,
-    name TEXT NOT NULL,
-    role TEXT NOT NULL DEFAULT 'USER',
-    manager_id INTEGER,
-    FOREIGN KEY (manager_id) REFERENCES users(id)
-    )
-`).run();
-
-const demoHash = bcrypt.hashSync('1234', 10);
-
-// Usuario de prueba
-db.prepare(`
-  INSERT OR IGNORE INTO users (email, password, name, role)
-  VALUES (?, ?, ?, ?)
-`).run('demo@trainlog.com', demoHash, 'Demo', 'MANAGER');
-
-// Función para obtener usuarios
 function getUsers() {
-    return db.prepare('SELECT id, email, name, role, manager_id FROM users').all();
-};
+  return db.prepare('SELECT id, email, name, role, manager_id FROM users').all();
+}
 
-// Función para crear usuarios
 function registrerUser(user, managerId) {
-    const { email, password, name } = user;
+  const { email, password, name } = user;
 
-    // Validación de los campos email y password
-    if (!email || !password || !name) {
-        return {
-            status: 400,
-            error: 'Email, password y name son obligatorios'
-        };
+  if (!email || !password || !name) {
+    return {
+      status: 400,
+      error: 'Email, password y name son obligatorios'
+    };
+  }
+
+  try {
+    const hashedPassword = bcrypt.hashSync(password, 10);
+
+    const result = db
+      .prepare('INSERT INTO users (email, password, name, role, manager_id) VALUES (?, ?, ?, ?, ?)')
+      .run(email, hashedPassword, name, 'USER', managerId);
+
+    return {
+      message: 'Usuario creado',
+      id: result.lastInsertRowid
+    };
+  } catch (error) {
+    if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
+      return {
+        status: 409,
+        error: 'El email ya está registrado'
+      };
     }
 
-    try {
-        // Preparamos la query
-        const stmt = db.prepare(`
-            INSERT INTO users (email, password, name, role, manager_id)
-            VALUES (?, ?, ?, 'USER', ?)
-        `);
-
-        // Encriptamos la contraseña
-        const hashedPassword = bcrypt.hashSync(password, 10);
-        // Cogemos el resultado de la query
-        const result = stmt.run(email, hashedPassword, name, managerId);
-
-        // Si todo ha salido bien
-        return {
-            message: 'Usuario creado',
-            id: result.lastInsertRowid
-        };
-    } catch (error) {
-        // El mail tiene que ser único
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return {
-                status: 409,
-                error: 'El email ya está registrado'
-            };
-        }
-
-        return {
-            status: 500,
-            error: 'Error interno'
-        };
-    }
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
 }
 
 function login({ email, password } = {}) {
-    if (!email || !password) {
-        return {
-            status: 400,
-            error: 'Email y password son obligatorios'
-        }
+  if (!email || !password) {
+    return {
+      status: 400,
+      error: 'Email y password son obligatorios'
+    };
+  }
+
+  try {
+    const user = db
+      .prepare('SELECT id, email, password, role FROM users WHERE email = ?')
+      .get(email);
+
+    if (!user || !bcrypt.compareSync(password, user.password)) {
+      return {
+        status: 401,
+        error: 'Credenciales incorrectas'
+      };
     }
 
-    try {
-        const stmt = db.prepare(`
-            SELECT id, email, password, role FROM users
-            WHERE  email = ? 
-        `);
+    // El frontend usa el role del JWT para decidir el dashboard.
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: '7d' }
+    );
 
-        const user = stmt.get(email);
-
-        if (!user) {
-            return {
-                status: 401,
-                error: 'Credenciales incorrectas'
-            };
-        }
-
-        const valid = bcrypt.compareSync(password, user.password);
-
-        if (!valid) {
-            return {
-                status: 401,
-                error: 'Credenciales incorrectas'
-            }
-        }
-
-        // Generar JWT
-        const token = jwt.sign(
-            {
-                id: user.id,
-                email: user.email,
-                role: user.role
-            },
-            JWT_SECRET,
-            { expiresIn: '7d' } // duración
-        );
-
-        return {
-            message: 'Login correcto',
-            id: user.id,
-            email: user.email,
-            token
-        };
-
-    } catch (error) {
-        return {
-            status: 500,
-            error: 'Error interno'
-        }
-    }
+    return {
+      message: 'Login correcto',
+      id: user.id,
+      email: user.email,
+      token
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
 }
 
 function getClients(managerId) {
-    // Preparamos la query
-    const stmt = db.prepare(`
-            SELECT id, email FROM users
-            WHERE  manager_id = ? 
-        `);
-
-    const result = stmt.all(managerId)
-
-    if (!result) {
-        return {
-            status: 400,
-            error: 'No hay usuarios'
-        }
-    }
-
-    return result;
-};
+  return db.prepare('SELECT id, email FROM users WHERE manager_id = ?').all(managerId);
+}
 
 function getManagerClients(managerId) {
+  try {
+    const users = db
+      .prepare('SELECT id, email, name FROM users WHERE manager_id = ?')
+      .all(managerId);
 
-    try {
-        const usersStmt = db.prepare(`
-            SELECT id, email, name
-            FROM users
-            WHERE manager_id = ?
-        `);
+    const workoutsCountStmt = db.prepare('SELECT COUNT(*) AS total FROM workouts WHERE user_id = ?');
+    const lastActivityStmt = db.prepare('SELECT MAX(date) AS last_activity FROM exercise_logs WHERE user_id = ?');
 
-        const workoutsCountStmt = db.prepare(`
-            SELECT COUNT(*) as total
-            FROM workouts
-            WHERE user_id = ?
-        `);
+    return users.map((user) => {
+      const workoutsCount = workoutsCountStmt.get(user.id);
+      const lastActivity = lastActivityStmt.get(user.id);
 
-        const lastActivityStmt = db.prepare(`
-            SELECT MAX(date) as last_activity
-            FROM exercise_logs
-            WHERE user_id = ?
-        `);
+      return {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        workouts_count: workoutsCount.total,
+        last_activity: lastActivity.last_activity || null
+      };
+    });
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
 
-        const users = usersStmt.all(managerId);
+function updateClient(userId, payload, managerId) {
+  const id = parsePositiveInt(userId);
 
-        const clients = users.map(user => {
+  if (!id) {
+    return {
+      status: 400,
+      error: 'userId inválido'
+    };
+  }
 
-            const workoutsCount = workoutsCountStmt.get(user.id);
-            const lastActivity = lastActivityStmt.get(user.id);
+  const ownedClient = db
+    .prepare('SELECT id FROM users WHERE id = ? AND manager_id = ? AND role = ?')
+    .get(id, managerId, 'USER');
 
-            return {
-                id: user.id,
-                email: user.email,
-                name: user.name,
-                workouts_count: workoutsCount.total,
-                last_activity: lastActivity.last_activity || null
-            };
-        });
+  if (!ownedClient) {
+    return {
+      status: 403,
+      error: 'Este usuario no pertenece al manager'
+    };
+  }
 
-        return clients;
+  const updates = [];
+  const values = [];
 
-    } catch (error) {
-        console.error(error);
-        return {
-            status: 500,
-            error: 'Error interno'
-        };
+  if (payload?.name !== undefined) {
+    const name = payload.name?.trim();
+
+    if (!name) {
+      return {
+        status: 400,
+        error: 'Nombre inválido'
+      };
     }
-};
 
-module.exports = { getUsers, registrerUser, login, getClients, getManagerClients };
+    updates.push('name = ?');
+    values.push(name);
+  }
+
+  if (payload?.email !== undefined) {
+    const email = payload.email?.trim();
+
+    if (!email) {
+      return {
+        status: 400,
+        error: 'Email inválido'
+      };
+    }
+
+    updates.push('email = ?');
+    values.push(email);
+  }
+
+  if (payload?.password !== undefined) {
+    const password = payload.password?.trim();
+
+    if (!password) {
+      return {
+        status: 400,
+        error: 'Password inválido'
+      };
+    }
+
+    updates.push('password = ?');
+    values.push(bcrypt.hashSync(password, 10));
+  }
+
+  if (updates.length === 0) {
+    return {
+      status: 400,
+      error: 'No hay campos para actualizar'
+    };
+  }
+
+  try {
+    db.prepare(`UPDATE users SET ${updates.join(', ')} WHERE id = ?`).run(...values, id);
+
+    const client = db
+      .prepare('SELECT id, email, name, role, manager_id FROM users WHERE id = ?')
+      .get(id);
+
+    return {
+      message: 'Cliente actualizado',
+      data: client
+    };
+  } catch (error) {
+    if (isSqliteUniqueError(error)) {
+      return {
+        status: 409,
+        error: 'El email ya está registrado'
+      };
+    }
+
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
+
+function deleteClient(userId, managerId) {
+  const id = parsePositiveInt(userId);
+
+  if (!id) {
+    return {
+      status: 400,
+      error: 'userId inválido'
+    };
+  }
+
+  const ownedClient = db
+    .prepare('SELECT id FROM users WHERE id = ? AND manager_id = ? AND role = ?')
+    .get(id, managerId, 'USER');
+
+  if (!ownedClient) {
+    return {
+      status: 403,
+      error: 'Este usuario no pertenece al manager'
+    };
+  }
+
+  try {
+    const tx = db.transaction(() => {
+      db.prepare('DELETE FROM exercise_logs WHERE user_id = ?').run(id);
+      db.prepare('DELETE FROM workouts WHERE user_id = ?').run(id);
+      db.prepare('DELETE FROM users WHERE id = ?').run(id);
+    });
+
+    tx();
+
+    return {
+      message: 'Cliente eliminado'
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
+
+module.exports = {
+  getUsers,
+  registrerUser,
+  login,
+  getClients,
+  getManagerClients,
+  updateClient,
+  deleteClient
+};

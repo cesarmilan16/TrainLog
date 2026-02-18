@@ -1,5 +1,4 @@
-import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -9,24 +8,23 @@ import { AuthService } from '../../core/services/auth.service';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [ReactiveFormsModule],
   templateUrl: './login.component.html',
-  styleUrl: './login.component.css'
+  styleUrl: './login.component.css',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
+  private readonly fb = inject(FormBuilder);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+
   loading = false;
   errorMessage = '';
 
-  readonly form = this.fb.group({
+  readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]]
   });
-
-  constructor(
-    private readonly fb: FormBuilder,
-    private readonly authService: AuthService,
-    private readonly router: Router
-  ) {}
 
   submit(): void {
     this.errorMessage = '';
@@ -37,21 +35,12 @@ export class LoginComponent {
     }
 
     const { email, password } = this.form.getRawValue();
-    if (!email || !password) {
-      return;
-    }
-
     this.loading = true;
 
     this.authService.login(email, password).subscribe({
       next: ({ user }) => {
         this.loading = false;
-        if (user.role === 'MANAGER') {
-          this.router.navigateByUrl('/manager');
-          return;
-        }
-
-        this.router.navigateByUrl('/user');
+        this.router.navigateByUrl(user.role === 'MANAGER' ? '/manager' : '/user');
       },
       error: (error: HttpErrorResponse | Error) => {
         this.loading = false;

@@ -1,204 +1,254 @@
-const Database = require('better-sqlite3');
-
-
-const db = new Database('trainlog.db');
-
-// Crear tabla si no existe
-db.prepare(`
-  CREATE TABLE IF NOT EXISTS workouts (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT UNIQUE NOT NULL,
-    user_id INTEGER NOT NULL,
-    manager_id INTEGER NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (manager_id) REFERENCES users(id)
-    )
-`).run();
+const { db } = require('./db');
+const { parsePositiveInt, isSqliteUniqueError } = require('../utils/data.helpers');
 
 function newWorkout(data, managerId) {
-    const { name, userId } = data;
+  const { name, userId } = data;
 
-    // Preparamos la query
-    const stmt = db.prepare(`
-            SELECT id, manager_id FROM users
-            WHERE id = ? AND manager_id = ?
-        `);
-
-    const result = stmt.get(userId, managerId)
-
-    // Si el usuario no lo pertenece al manager salta error
-    if (!result) {
-        return {
-            status: 403,
-            error: 'Este usuario no pertenece a tu cuenta'
-        };
+  if (!name || !name.trim()) {
+    return {
+      status: 400,
+      error: 'Nombre de entrenamiento obligatorio'
     };
+  }
 
-    try {
-        const stmt = db.prepare(`
-                INSERT INTO workouts (name, user_id, manager_id)
-                VALUES (?, ?, ?)
-            `);
+  const parsedUserId = parsePositiveInt(userId);
 
-        const result = stmt.run(name, userId, managerId);
+  if (!parsedUserId) {
+    return {
+      status: 400,
+      error: 'userId inválido'
+    };
+  }
 
-        return {
-            message: 'Entrenamiento creado',
-            id: result.lastInsertRowid
-        };
-    } catch (error) {
-        console.error(error)
-        if (error.code === 'SQLITE_CONSTRAINT_UNIQUE') {
-            return {
-                status: 409,
-                error: 'El entrenamiento ya está registrado'
-            };
-        }
+  const user = db
+    .prepare('SELECT id FROM users WHERE id = ? AND manager_id = ?')
+    .get(parsedUserId, managerId);
 
-        return {
-            status: 500,
-            error: 'Error interno'
-        };
+  if (!user) {
+    return {
+      status: 403,
+      error: 'Este usuario no pertenece a tu cuenta'
+    };
+  }
+
+  try {
+    const result = db
+      .prepare('INSERT INTO workouts (name, user_id, manager_id) VALUES (?, ?, ?)')
+      .run(name.trim(), parsedUserId, managerId);
+
+    return {
+      message: 'Entrenamiento creado',
+      id: result.lastInsertRowid
+    };
+  } catch (error) {
+    if (isSqliteUniqueError(error)) {
+      return {
+        status: 409,
+        error: 'El usuario ya tiene un entrenamiento con ese nombre'
+      };
     }
+
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
 }
 
 function getMyWorkouts(userId) {
-    // Preparamos la query
-    const stmt = db.prepare(`
-            SELECT id, name FROM workouts
-            WHERE user_id = ?
-        `);
-
-    const result = stmt.all(userId)
-
-    if (result.length === 0) {
-        return [];
-    };
-
-    return result;
+  return db
+    .prepare('SELECT id, name FROM workouts WHERE user_id = ? ORDER BY id DESC')
+    .all(userId);
 }
 
 function getWorkoutsManager(userId, managerId) {
-    // Preparamos la query
-    const stmt = db.prepare(`
-            SELECT workouts.id, workouts.name, users.email AS name_user
-            FROM workouts
-            JOIN users ON workouts.user_id = users.id
-            WHERE workouts.user_id = ? 
-            AND workouts.manager_id = ?
-        `);
+  const parsedUserId = parsePositiveInt(userId);
 
-    const result = stmt.all(userId, managerId)
-
-    if (result.length === 0) {
-        return {
-            status: 404,
-            error: 'Este usuario no tiene entrenamientos'
-        };
+  if (!parsedUserId) {
+    return {
+      status: 400,
+      error: 'userId inválido'
     };
+  }
 
-    return result;
-};
+  const workouts = db
+    .prepare(`
+      SELECT workouts.id, workouts.name, users.email AS name_user
+      FROM workouts
+      JOIN users ON workouts.user_id = users.id
+      WHERE workouts.user_id = ? AND workouts.manager_id = ?
+      ORDER BY workouts.id DESC
+    `)
+    .all(parsedUserId, managerId);
+
+  if (workouts.length === 0) {
+    return {
+      status: 404,
+      error: 'Este usuario no tiene entrenamientos'
+    };
+  }
+
+  return workouts;
+}
 
 function getUserDashboard(userId) {
-    // Preparamos las querys
-    const workoutsStmt = db.prepare(`
-        SELECT id, name
-        FROM workouts
-        WHERE user_id = ?
-    `);
+  const workoutsStmt = db.prepare('SELECT id, name FROM workouts WHERE user_id = ? ORDER BY id DESC');
+  const exercisesStmt = db.prepare(`
+    SELECT id, name, sets, reps, rir, rm_percent, order_index
+    FROM workout_exercises
+    WHERE workout_id = ?
+    ORDER BY order_index
+  `);
+  const lastLogStmt = db.prepare(`
+    SELECT weight, reps, date
+    FROM exercise_logs
+    WHERE exercise_id = ? AND user_id = ?
+    ORDER BY date DESC
+    LIMIT 1
+  `);
 
-    const exercisesStmt = db.prepare(`
-        SELECT id, name, sets, reps, order_index
-        FROM workout_exercises
-        WHERE workout_id = ?
-        ORDER BY order_index
-    `);
+  try {
+    const workouts = workoutsStmt.all(userId);
 
-    const lastLogStmt = db.prepare(`
-        SELECT weight, reps, date
-        FROM exercise_logs
-        WHERE exercise_id = ?
-        AND user_id = ?
-        ORDER BY date DESC
-        LIMIT 1
-    `);
-
-    try {
-        const workouts = workoutsStmt.all(userId);
-
-        if (workouts.length === 0) {
-            return [];
-        };
-
-        // Vamos con el dashboard
-        const dashboard = workouts.map(workout => {
-            // ejercicios del workout
-            const exercises = exercisesStmt.all(workout.id).map(exercise => {
-                // último log
-                const lastLog = lastLogStmt.get(exercise.id, userId);
-
-                return {
-                    ...exercise,
-                    last_log: lastLog || null
-                };
-            });
-
-            return {
-                id: workout.id,
-                name: workout.name,
-                exercises
-            };
-        });
-
-        return dashboard;
-
-    } catch (error) {
-        console.error(error);
-        return {
-            status: 500,
-            error: 'Error interno'
-        }
+    return workouts.map((workout) => ({
+      id: workout.id,
+      name: workout.name,
+      exercises: exercisesStmt.all(workout.id).map((exercise) => ({
+        ...exercise,
+        last_log: lastLogStmt.get(exercise.id, userId) || null
+      }))
+    }));
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
     };
-
-};
+  }
+}
 
 function getManagerDashboard(userId, managerId) {
+  const parsedUserId = parsePositiveInt(userId);
 
-     // Preparamos la query
-    const userStmt = db.prepare(`
-            SELECT id
-            FROM users
-            WHERE id = ? 
-            AND manager_id = ?
-        `);
-
-    const user = userStmt.get(userId, managerId)
-
-    if (!user) {
-        return {
-            status: 403,
-            error: 'Este usuario no perntenece al manager'
-        };
+  if (!parsedUserId) {
+    return {
+      status: 400,
+      error: 'userId inválido'
     };
+  }
 
-    try {
+  const user = db
+    .prepare('SELECT id FROM users WHERE id = ? AND manager_id = ?')
+    .get(parsedUserId, managerId);
 
-        const dashboard = getUserDashboard(userId)
-
-        return dashboard;
-
-    } catch (error) {
-        console.error(error)
-        return {
-            status: 500,
-            error: 'Error interno'
-        }
+  if (!user) {
+    return {
+      status: 403,
+      error: 'Este usuario no pertenece al manager'
     };
+  }
+
+  return getUserDashboard(parsedUserId);
+}
+
+function deleteWorkout(workoutId, managerId) {
+  const id = parsePositiveInt(workoutId);
+
+  if (!id) {
+    return {
+      status: 400,
+      error: 'Id inválido'
+    };
+  }
+
+  const ownership = db
+    .prepare('SELECT id FROM workouts WHERE id = ? AND manager_id = ?')
+    .get(id, managerId);
+
+  if (!ownership) {
+    return {
+      status: 403,
+      error: 'Este entrenamiento no pertenece a este manager'
+    };
+  }
+
+  try {
+    const result = db.prepare('DELETE FROM workouts WHERE id = ?').run(id);
+
+    return {
+      message: 'Entrenamiento eliminado',
+      changes: result.changes
+    };
+  } catch (error) {
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
+
+function updateWorkout(workoutId, payload, managerId) {
+  const id = parsePositiveInt(workoutId);
+  const name = payload?.name?.trim();
+
+  if (!id) {
+    return {
+      status: 400,
+      error: 'Id inválido'
+    };
+  }
+
+  if (!name) {
+    return {
+      status: 400,
+      error: 'Nombre de entrenamiento obligatorio'
+    };
+  }
+
+  const ownership = db
+    .prepare('SELECT id, user_id FROM workouts WHERE id = ? AND manager_id = ?')
+    .get(id, managerId);
+
+  if (!ownership) {
+    return {
+      status: 403,
+      error: 'Este entrenamiento no pertenece a este manager'
+    };
+  }
+
+  try {
+    db.prepare('UPDATE workouts SET name = ? WHERE id = ?').run(name, id);
+
+    const workout = db.prepare('SELECT id, name, user_id, manager_id FROM workouts WHERE id = ?').get(id);
+
+    return {
+      message: 'Entrenamiento actualizado',
+      data: workout
+    };
+  } catch (error) {
+    if (isSqliteUniqueError(error)) {
+      return {
+        status: 409,
+        error: 'El usuario ya tiene un entrenamiento con ese nombre'
+      };
+    }
+
+    console.error(error);
+    return {
+      status: 500,
+      error: 'Error interno'
+    };
+  }
+}
+
+module.exports = {
+  newWorkout,
+  getMyWorkouts,
+  getWorkoutsManager,
+  getUserDashboard,
+  getManagerDashboard,
+  deleteWorkout,
+  updateWorkout
 };
-
-// Función para eliminar
-
-
-
-module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard, getManagerDashboard };

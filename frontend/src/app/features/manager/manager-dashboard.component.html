@@ -1,30 +1,66 @@
-<section class="container manager">
+<section class="container manager" (click)="closeMenus()">
   <header class="card topbar">
     <div>
-      <h1>Panel Manager</h1>
-      <p class="muted">Gestiona clientes, entrenamientos y ejercicios</p>
+      <span class="badge">Manager</span>
+      <h1>Panel de gestión</h1>
+      <p class="muted">Clientes, workouts y ejercicios en un flujo único.</p>
     </div>
     <button class="ghost" (click)="logout()">Cerrar sesión</button>
   </header>
 
-  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  @if (errorMessage) {
+    <p class="error app-error">{{ errorMessage }}</p>
+  }
 
   <section class="grid cols-3">
-    <article class="card">
-      <h2>Clientes</h2>
-      <p class="muted" *ngIf="loadingClients">Cargando...</p>
-
-      <div class="list" *ngIf="!loadingClients">
-        <button
-          class="list-item"
-          *ngFor="let client of clients"
-          [class.active]="selectedClientId === client.id"
-          (click)="selectClient(client.id)"
-        >
-          <span>{{ client.name }}</span>
-          <small>{{ client.email }}</small>
-        </button>
+    <article class="card panel">
+      <div class="section-title">
+        <h2>Clientes</h2>
+        <span class="muted">{{ clients.length }}</span>
       </div>
+
+      @if (loadingClients) {
+        <p class="muted">Cargando...</p>
+      }
+
+      @if (!loadingClients && clients.length === 0) {
+        <p class="muted empty">No hay clientes todavía.</p>
+      }
+
+      @if (!loadingClients) {
+        <div class="list">
+          @for (client of clients; track client.id) {
+            <div class="list-row" (click)="$event.stopPropagation()">
+              <button
+                class="list-item"
+                [class.active]="selectedClientId === client.id"
+                (click)="selectClient(client.id)"
+              >
+                <span class="title">{{ client.name }}</span>
+                <small>{{ client.email }}</small>
+              </button>
+
+              <div class="menu-wrap">
+                <button
+                  type="button"
+                  class="menu-trigger"
+                  aria-label="Opciones cliente"
+                  (click)="openClientMenu(client.id, $event)"
+                >
+                  ⋯
+                </button>
+
+                @if (openClientMenuId === client.id) {
+                  <div class="menu-dropdown">
+                    <button type="button" class="menu-item" (click)="openEditClientModal(client)">Editar</button>
+                    <button type="button" class="menu-item danger" (click)="openDeleteClientConfirm(client.id)">Eliminar</button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       <hr />
 
@@ -33,82 +69,200 @@
         <input type="text" placeholder="Nombre" formControlName="name" />
         <input type="email" placeholder="Email" formControlName="email" />
         <input type="password" placeholder="Password" formControlName="password" />
-        <button type="submit">Crear</button>
+        <button type="submit">Crear cliente</button>
       </form>
     </article>
 
-    <article class="card">
-      <h2>Workouts</h2>
-      <p class="muted" *ngIf="!selectedClientId">Selecciona un cliente</p>
-      <p class="muted" *ngIf="loadingWorkouts">Cargando...</p>
-
-      <div class="list" *ngIf="selectedClientId && !loadingWorkouts">
-        <button
-          class="list-item"
-          *ngFor="let workout of workouts"
-          [class.active]="selectedWorkoutId === workout.id"
-          (click)="selectWorkout(workout.id)"
-        >
-          {{ workout.name }}
-        </button>
+    <article class="card panel">
+      <div class="section-title">
+        <h2>Workouts</h2>
+        <span class="muted">{{ workouts.length }}</span>
       </div>
+
+      @if (!selectedClientId) {
+        <p class="muted empty">Selecciona un cliente para ver sus workouts.</p>
+      }
+      @if (loadingWorkouts) {
+        <p class="muted">Cargando...</p>
+      }
+
+      @if (selectedClientId && !loadingWorkouts && workouts.length === 0) {
+        <p class="muted empty">Este cliente todavía no tiene workouts.</p>
+      }
+
+      @if (selectedClientId && !loadingWorkouts) {
+        <div class="list">
+          @for (workout of workouts; track workout.id) {
+            <div class="list-row" (click)="$event.stopPropagation()">
+              <button
+                class="list-item"
+                [class.active]="selectedWorkoutId === workout.id"
+                (click)="selectWorkout(workout.id)"
+              >
+                <span class="title">{{ workout.name }}</span>
+              </button>
+
+              <div class="menu-wrap">
+                <button
+                  type="button"
+                  class="menu-trigger"
+                  aria-label="Opciones entrenamiento"
+                  (click)="openWorkoutMenu(workout.id, $event)"
+                >
+                  ⋯
+                </button>
+
+                @if (openWorkoutMenuId === workout.id) {
+                  <div class="menu-dropdown">
+                    <button type="button" class="menu-item" (click)="openEditWorkoutModal(workout)">Editar</button>
+                    <button type="button" class="menu-item danger" (click)="openDeleteWorkoutConfirm(workout.id)">Eliminar</button>
+                  </div>
+                }
+              </div>
+            </div>
+          }
+        </div>
+      }
 
       <hr />
 
       <h3>Nuevo workout</h3>
       <form [formGroup]="createWorkoutForm" (ngSubmit)="createWorkout()" class="form-row">
         <input type="text" placeholder="Nombre del workout" formControlName="name" />
-        <button type="submit" [disabled]="!selectedClientId">Crear</button>
+        <button type="submit" [disabled]="!selectedClientId">Crear workout</button>
       </form>
     </article>
 
-    <article class="card">
-      <h2>Ejercicios</h2>
-      <p class="muted" *ngIf="!selectedWorkoutId">Selecciona un workout</p>
-      <p class="muted" *ngIf="loadingExercises">Cargando...</p>
-
-      <div class="exercise-list" *ngIf="selectedWorkoutId && !loadingExercises">
-        <div class="exercise-item" *ngFor="let exercise of exercises">
-          <ng-container *ngIf="editingExerciseId !== exercise.id; else editForm">
-            <div>
-              <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
-              <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
-            </div>
-            <div class="row-actions">
-              <button class="secondary" (click)="startEdit(exercise)">Editar</button>
-              <button class="danger" (click)="deleteExercise(exercise.id)">Borrar</button>
-            </div>
-          </ng-container>
-
-          <ng-template #editForm>
-            <form [formGroup]="editExerciseForm" class="form-row compact">
-              <input type="text" formControlName="name" />
-              <div class="mini-grid">
-                <input type="number" formControlName="sets" placeholder="Sets" />
-                <input type="number" formControlName="reps" placeholder="Reps" />
-                <input type="number" formControlName="order_index" placeholder="Orden" />
-              </div>
-              <div class="row-actions">
-                <button type="button" (click)="saveEdit(exercise.id)">Guardar</button>
-                <button type="button" class="ghost" (click)="cancelEdit()">Cancelar</button>
-              </div>
-            </form>
-          </ng-template>
-        </div>
+    <article class="card panel">
+      <div class="section-title">
+        <h2>Ejercicios</h2>
+        <span class="muted">{{ exercises.length }}</span>
       </div>
+
+      @if (!selectedWorkoutId) {
+        <p class="muted empty">Selecciona un workout para ver sus ejercicios.</p>
+      }
+      @if (loadingExercises) {
+        <p class="muted">Cargando...</p>
+      }
+
+      @if (selectedWorkoutId && !loadingExercises && exercises.length === 0) {
+        <p class="muted empty">Este workout no tiene ejercicios aún.</p>
+      }
+
+      @if (selectedWorkoutId && !loadingExercises) {
+        <div class="exercise-list">
+          @for (exercise of exercises; track exercise.id) {
+            <div class="exercise-item">
+              @if (editingExerciseId !== exercise.id) {
+                <div>
+                  <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
+                  <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
+                  @if (exercise.rir !== null || exercise.rm_percent !== null) {
+                    <p class="muted">
+                      Intensidad:
+                      @if (exercise.rir !== null) { RIR {{ exercise.rir }} }
+                      @if (exercise.rir !== null && exercise.rm_percent !== null) { · }
+                      @if (exercise.rm_percent !== null) { {{ exercise.rm_percent }}% RM }
+                    </p>
+                  }
+                </div>
+                <div class="row-actions">
+                  <button class="secondary" (click)="startEdit(exercise)">Editar</button>
+                  <button class="danger" (click)="deleteExercise(exercise.id)">Borrar</button>
+                </div>
+              } @else {
+                <form [formGroup]="editExerciseForm" class="form-row compact">
+                  <input type="text" formControlName="name" />
+                  <div class="mini-grid mini-grid-main">
+                    <input type="number" formControlName="sets" placeholder="Series" />
+                    <input type="number" formControlName="reps" placeholder="Repeticiones" />
+                    <input type="number" formControlName="order_index" placeholder="Orden" />
+                  </div>
+                  <div class="mini-grid mini-grid-intensity">
+                    <input type="number" formControlName="rir" placeholder="RIR 0-10" />
+                    <input type="number" formControlName="rm_percent" placeholder="%RM 1-100" />
+                  </div>
+                  <div class="row-actions">
+                    <button type="button" (click)="saveEdit(exercise.id)">Guardar</button>
+                    <button type="button" class="ghost" (click)="cancelEdit()">Cancelar</button>
+                  </div>
+                </form>
+              }
+            </div>
+          }
+        </div>
+      }
 
       <hr />
 
       <h3>Nuevo ejercicio</h3>
       <form [formGroup]="createExerciseForm" (ngSubmit)="createExercise()" class="form-row">
         <input type="text" placeholder="Nombre" formControlName="name" />
-        <div class="mini-grid">
-          <input type="number" placeholder="Sets" formControlName="sets" />
-          <input type="number" placeholder="Reps" formControlName="reps" />
+        <div class="mini-grid mini-grid-main">
+          <input type="number" placeholder="Series" formControlName="sets" />
+          <input type="number" placeholder="Repeticiones" formControlName="reps" />
           <input type="number" placeholder="Orden" formControlName="order_index" />
         </div>
-        <button type="submit" [disabled]="!selectedWorkoutId">Crear</button>
+        <div class="mini-grid mini-grid-intensity">
+          <input type="number" placeholder="RIR 0-10" formControlName="rir" />
+          <input type="number" placeholder="%RM 1-100" formControlName="rm_percent" />
+        </div>
+        <button type="submit" [disabled]="!selectedWorkoutId">Crear ejercicio</button>
       </form>
     </article>
   </section>
+
+  @if (editModalOpen) {
+    <div class="modal-backdrop" (click)="closeEditModal()">
+      <div class="modal-card card" (click)="$event.stopPropagation()">
+        <div class="modal-head">
+          <h3>{{ editModalTitle }}</h3>
+          <button type="button" class="ghost close-btn" (click)="closeEditModal()">✕</button>
+        </div>
+
+        <form [formGroup]="editEntityForm" class="form-row" (ngSubmit)="submitEditModal()">
+          <div>
+            <label for="edit-name">Nombre</label>
+            <input id="edit-name" type="text" formControlName="name" placeholder="Nombre" />
+          </div>
+
+          @if (editModalType === 'client') {
+            <div>
+              <label for="edit-email">Email</label>
+              <input id="edit-email" type="email" formControlName="email" placeholder="Email" />
+            </div>
+
+            <div>
+              <label for="edit-password">Password (opcional)</label>
+              <input id="edit-password" type="password" formControlName="password" placeholder="Nueva contraseña" />
+            </div>
+          }
+
+          <div class="row-actions">
+            <button type="submit">Guardar cambios</button>
+            <button type="button" class="ghost" (click)="closeEditModal()">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  }
+
+  @if (confirmModalOpen) {
+    <div class="modal-backdrop" (click)="closeConfirmModal()">
+      <div class="modal-card card" (click)="$event.stopPropagation()">
+        <div class="modal-head">
+          <h3>{{ confirmModalTitle }}</h3>
+          <button type="button" class="ghost close-btn" (click)="closeConfirmModal()">✕</button>
+        </div>
+
+        <p class="muted">{{ confirmModalMessage }}</p>
+
+        <div class="row-actions">
+          <button type="button" class="danger" (click)="confirmDelete()">Eliminar</button>
+          <button type="button" class="ghost" (click)="closeConfirmModal()">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  }
 </section>

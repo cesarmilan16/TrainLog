@@ -1,77 +1,30 @@
 const express = require('express');
+
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
 const { addExercise, getExercises, deleteExercise, updateExercise } = require('../data/exercises.data');
-
+const { handleResult } = require('../utils/respond');
 
 const router = express.Router();
 
-//Crear ejercicio
 router.post('/', auth, authorize('MANAGER'), (req, res) => {
-    const result = addExercise(req.body, req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    };
-
-    res.status(201).json({
-        message: result.message,
-        id: result.id
-    })
+  const result = addExercise(req.body, req.user.id);
+  return handleResult(res, result, (data) => ({ message: data.message, id: data.id }), 201);
 });
 
-// Ver ejercicios
 router.get('/:workoutId', auth, authorize('MANAGER'), (req, res) => {
-    const result = getExercises(req.params.workoutId, req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    }
-
-    res.status(200).json({
-        message: "Ejercicios:",
-        data: result
-    })
+  const result = getExercises(req.params.workoutId, req.user.id);
+  return handleResult(res, result, (data) => ({ message: 'Ejercicios:', data }));
 });
 
-// Borrar ejercicios
 router.delete('/:exerciseId', auth, authorize('MANAGER'), (req, res) => {
-    const result = deleteExercise(req.params.exerciseId, req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    }
-
-    res.status(200).json({
-        message: "Ejercicio eliminado",
-        data: result
-    })
+  const result = deleteExercise(req.params.exerciseId, req.user.id);
+  return handleResult(res, result, (data) => ({ message: 'Ejercicio eliminado', data }));
 });
 
-// Editar ejercicio
 router.put('/:exerciseId', auth, authorize('MANAGER'), (req, res) => {
-    const result = updateExercise(req.params.exerciseId, req.body, req.user.id);
-
-    if (result.error) {
-        const status = result.status ?? 400;
-        return res.status(status).json({
-            message: result.error
-        });
-    }
-
-    res.status(200).json({
-        message: result.message,
-        data: result.data
-    });
+  const result = updateExercise(req.params.exerciseId, req.body, req.user.id);
+  return handleResult(res, result, (data) => ({ message: data.message, data: data.data }));
 });
 
 module.exports = router;

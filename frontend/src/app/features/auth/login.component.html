@@ -1,25 +1,39 @@
-<section class="container login-wrap">
-  <div class="card login-card">
-    <p class="eyebrow">TrainLog</p>
-    <h1>Iniciar sesión</h1>
-    <p class="muted">Accede con tu cuenta manager o usuario.</p>
+<section class="login-wrap">
+  <div class="login-grid">
+    <aside class="card login-info">
+      <span class="badge">TrainLog</span>
+      <h1>Entrena con estructura y seguimiento real</h1>
+      <p class="muted">Gestiona clientes, planes y evolución desde una sola plataforma.</p>
 
-    <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
-      <div>
-        <label for="email">Email</label>
-        <input id="email" type="email" formControlName="email" placeholder="demo@trainlog.com" />
+      <div class="demo-box">
+        <p><strong>Manager:</strong> demo@trainlog.com / 1234</p>
+        <p><strong>Cliente:</strong> cliente@trainlog.com / 1234</p>
       </div>
+    </aside>
 
-      <div>
-        <label for="password">Password</label>
-        <input id="password" type="password" formControlName="password" placeholder="******" />
-      </div>
+    <div class="card login-card">
+      <p class="eyebrow">Acceso</p>
+      <h2>Iniciar sesión</h2>
 
-      <button type="submit" [disabled]="loading">
-        {{ loading ? 'Entrando...' : 'Entrar' }}
-      </button>
+      <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
+        <div>
+          <label for="email">Email</label>
+          <input id="email" type="email" formControlName="email" placeholder="demo@trainlog.com" />
+        </div>
 
-      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-    </form>
+        <div>
+          <label for="password">Password</label>
+          <input id="password" type="password" formControlName="password" placeholder="******" />
+        </div>
+
+        <button type="submit" [disabled]="loading">
+          {{ loading ? 'Entrando...' : 'Entrar al panel' }}
+        </button>
+
+        @if (errorMessage) {
+          <p class="error">{{ errorMessage }}</p>
+        }
+      </form>
+    </div>
   </div>
 </section>

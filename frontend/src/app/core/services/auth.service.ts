@@ -68,6 +68,8 @@ export class AuthService {
       const payload = token.split('.')[1];
       const normalized = payload.replace(/-/g, '+').replace(/_/g, '/');
       const padded = normalized + '='.repeat((4 - (normalized.length % 4)) % 4);
+
+      // JWT usa base64url; convertimos y parseamos para leer el claim role.
       const decoded = JSON.parse(atob(padded));
       return decoded.role as UserRole;
     } catch {

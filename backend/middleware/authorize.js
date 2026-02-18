@@ -1,8 +1,8 @@
 function authorize(...allowedRoles) {
     return (req, res, next) => {
-        const useRole = req.user.role;
+        const userRole = req.user.role;
 
-        if (!allowedRoles.includes(useRole)) {
+        if (!allowedRoles.includes(userRole)) {
             return res.status(403).json({
                 message: 'No tienes permisos'
             });

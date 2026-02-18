@@ -1,42 +1,94 @@
 <section class="container user">
   <header class="card topbar">
     <div>
-      <h1>Mi dashboard</h1>
-      <p class="muted">Tus workouts y último progreso por ejercicio</p>
+      <span class="badge">Usuario</span>
+      <h1>Mi progreso</h1>
+      <p class="muted">Revisa tu plan y registra avances en segundos.</p>
     </div>
     <button class="ghost" (click)="logout()">Cerrar sesión</button>
   </header>
 
-  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
-  <p class="muted" *ngIf="loading">Cargando dashboard...</p>
+  @if (errorMessage) {
+    <p class="error app-error">{{ errorMessage }}</p>
+  }
 
-  <section class="grid workouts" *ngIf="!loading">
-    <article class="card" *ngFor="let workout of dashboard">
-      <h2>{{ workout.name }}</h2>
+  @if (loading) {
+    <p class="muted">Cargando dashboard...</p>
+  }
 
-      <div class="exercise" *ngFor="let exercise of workout.exercises">
-        <div>
-          <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
-          <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
-          <p class="muted" *ngIf="exercise.last_log">
-            Último log: {{ exercise.last_log.weight }}kg x {{ exercise.last_log.reps }} reps ({{ exercise.last_log.date | date:'short' }})
-          </p>
-          <p class="muted" *ngIf="!exercise.last_log">Sin logs todavía</p>
-        </div>
+  @if (!loading && dashboard.length === 0) {
+    <p class="muted empty-state">No tienes workouts asignados todavía.</p>
+  }
 
-        <button class="secondary" (click)="openLog(exercise.id)">Registrar log</button>
-
-        <form class="form-row inline" *ngIf="openedExerciseId === exercise.id" [formGroup]="logForm">
-          <div class="two-col">
-            <input type="number" placeholder="Peso (kg)" formControlName="weight" />
-            <input type="number" placeholder="Reps" formControlName="reps" />
+  @if (!loading) {
+    <section class="grid workouts">
+      @for (workout of dashboard; track workout.id) {
+        <article class="card workout-card">
+          <div class="section-title">
+            @if (isMobileView) {
+              <button
+                type="button"
+                class="workout-toggle"
+                [class.open]="isWorkoutExpanded(workout.id)"
+                (click)="toggleWorkout(workout.id)"
+              >
+                <span>
+                  <strong class="workout-title">{{ workout.name }}</strong>
+                  <small class="muted">{{ workout.exercises.length }} ejercicios</small>
+                </span>
+                <strong>{{ isWorkoutExpanded(workout.id) ? '−' : '+' }}</strong>
+              </button>
+            } @else {
+              <h2>{{ workout.name }}</h2>
+              <span class="muted">{{ workout.exercises.length }} ejercicios</span>
+            }
           </div>
-          <div class="row-actions">
-            <button type="button" (click)="saveLog(exercise.id)">Guardar</button>
-            <button type="button" class="ghost" (click)="openedExerciseId = null">Cancelar</button>
-          </div>
-        </form>
-      </div>
-    </article>
-  </section>
+
+          @if (!isMobileView || isWorkoutExpanded(workout.id)) {
+            @for (exercise of workout.exercises; track exercise.id) {
+              <div class="exercise">
+                <div>
+                  <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
+                  <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
+                  @if (exercise.rir !== null || exercise.rm_percent !== null) {
+                    <p class="muted">
+                      Intensidad:
+                      @if (exercise.rir !== null) { RIR {{ exercise.rir }} }
+                      @if (exercise.rir !== null && exercise.rm_percent !== null) { · }
+                      @if (exercise.rm_percent !== null) { {{ exercise.rm_percent }}% RM }
+                    </p>
+                  }
+                  @if (exercise.last_log) {
+                    <p class="muted log-chip">
+                      Último: {{ exercise.last_log.weight }}kg x {{ exercise.last_log.reps }} ·
+                      {{ exercise.last_log.date | date:'short' }}
+                    </p>
+                  } @else {
+                    <p class="muted">Sin logs todavía</p>
+                  }
+                </div>
+
+                <button class="secondary" (click)="openLog(exercise.id)">Registrar log</button>
+
+                @if (openedExerciseId === exercise.id) {
+                  <form class="form-row inline" [formGroup]="logForm">
+                    <div class="two-col">
+                      <input type="number" placeholder="Peso (kg)" formControlName="weight" />
+                      <input type="number" placeholder="Reps" formControlName="reps" />
+                    </div>
+                    <div class="row-actions">
+                      <button type="button" (click)="saveLog(exercise.id)">Guardar</button>
+                      <button type="button" class="ghost" (click)="openedExerciseId = null">Cancelar</button>
+                    </div>
+                  </form>
+                }
+              </div>
+            }
+          } @else if (isMobileView) {
+            <p class="muted collapsed-hint">Pulsa para desplegar ejercicios</p>
+          }
+        </article>
+      }
+    </section>
+  }
 </section>

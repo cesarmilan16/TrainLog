@@ -1,4 +1,4 @@
-# TrainLog Frontend (Angular)
+# TrainLog Frontend (Angular 21)
 
 ## Requisitos
 - Node.js 20+
@@ -11,11 +11,8 @@ npm install
 npm start
 ```
 
-La app se levanta en `http://localhost:4200` y usa proxy para `/users`, `/workouts`, `/exercises`, `/logs` hacia el backend.
+La app se levanta en `http://localhost:4200` y usa proxy para `/users`, `/workouts`, `/exercises`, `/logs`.
 
-## Login de prueba
-- Manager demo:
-  - email: `demo@trainlog.com`
-  - password: `1234`
-
-Desde el panel manager puedes crear clientes y sus planes.
+## Login demo
+- Manager: `demo@trainlog.com` / `1234`
+- Cliente: `cliente@trainlog.com` / `1234`

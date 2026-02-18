@@ -13,8 +13,8 @@ db.prepare(`
     user_id INTEGER NOT NULL,
     exercise_id INTEGER NOT NULL,
     FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (exercise_id) REFERENCES workout_exercises(id)
-    )
+    FOREIGN KEY (exercise_id) REFERENCES workout_exercises(id) ON DELETE CASCADE
+  )
 `).run();
 
 function addLog(data, userId) {

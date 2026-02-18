@@ -116,4 +116,57 @@ function getExercises(workoutId, managerId) {
     }
 }
 
-module.exports = { addExercise, getExercises }
+function deleteExercise(exerciseId, managerId) {
+
+    const id = Number(exerciseId);
+
+    if (!id) {
+        return {
+            status: 400,
+            error: 'Id inválido'
+        };
+    }
+
+    // 1. Validar ownership
+    const ownershipStmt = db.prepare(`
+        SELECT we.id
+        FROM workout_exercises we
+        JOIN workouts w ON we.workout_id = w.id
+        WHERE we.id = ?
+        AND w.manager_id = ?
+    `);
+
+    const ownership = ownershipStmt.get(id, managerId);
+
+    if (!ownership) {
+        return {
+            status: 403,
+            error: 'Este ejercicio no pertenece a este manager'
+        };
+    }
+
+    try {
+        // 2. Borrar ejercicio
+        const deleteStmt = db.prepare(`
+            DELETE FROM workout_exercises
+            WHERE id = ?
+        `);
+
+        const result = deleteStmt.run(id);
+
+        return {
+            message: 'Ejercicio eliminado',
+            changes: result.changes
+        };
+
+    } catch (error) {
+        console.error(error);
+        return {
+            status: 500,
+            error: 'Error interno'
+        };
+    }
+};
+
+
+module.exports = { addExercise, getExercises, deleteExercise }

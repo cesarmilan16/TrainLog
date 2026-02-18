@@ -1,7 +1,7 @@
 const express = require('express');
 const auth = require('../middleware/auth');
 const authorize = require('../middleware/authorize');
-const { addExercise, getExercises, deleteExercise } = require('../data/exercises.data');
+const { addExercise, getExercises, deleteExercise, updateExercise } = require('../data/exercises.data');
 
 
 const router = express.Router();
@@ -55,6 +55,23 @@ router.delete('/:exerciseId', auth, authorize('MANAGER'), (req, res) => {
         message: "Ejercicio eliminado",
         data: result
     })
+});
+
+// Editar ejercicio
+router.put('/:exerciseId', auth, authorize('MANAGER'), (req, res) => {
+    const result = updateExercise(req.params.exerciseId, req.body, req.user.id);
+
+    if (result.error) {
+        const status = result.status ?? 400;
+        return res.status(status).json({
+            message: result.error
+        });
+    }
+
+    res.status(200).json({
+        message: result.message,
+        data: result.data
+    });
 });
 
 module.exports = router;

@@ -85,4 +85,7 @@ router.get('/manager/:userId/dashboard', auth, authorize('MANAGER'), (req, res) 
     });
 });
 
+// Ruta para eliminar
+
+
 module.exports = router;

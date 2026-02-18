@@ -1,0 +1,114 @@
+<section class="container manager">
+  <header class="card topbar">
+    <div>
+      <h1>Panel Manager</h1>
+      <p class="muted">Gestiona clientes, entrenamientos y ejercicios</p>
+    </div>
+    <button class="ghost" (click)="logout()">Cerrar sesión</button>
+  </header>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+
+  <section class="grid cols-3">
+    <article class="card">
+      <h2>Clientes</h2>
+      <p class="muted" *ngIf="loadingClients">Cargando...</p>
+
+      <div class="list" *ngIf="!loadingClients">
+        <button
+          class="list-item"
+          *ngFor="let client of clients"
+          [class.active]="selectedClientId === client.id"
+          (click)="selectClient(client.id)"
+        >
+          <span>{{ client.name }}</span>
+          <small>{{ client.email }}</small>
+        </button>
+      </div>
+
+      <hr />
+
+      <h3>Nuevo cliente</h3>
+      <form [formGroup]="createClientForm" (ngSubmit)="createClient()" class="form-row">
+        <input type="text" placeholder="Nombre" formControlName="name" />
+        <input type="email" placeholder="Email" formControlName="email" />
+        <input type="password" placeholder="Password" formControlName="password" />
+        <button type="submit">Crear</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h2>Workouts</h2>
+      <p class="muted" *ngIf="!selectedClientId">Selecciona un cliente</p>
+      <p class="muted" *ngIf="loadingWorkouts">Cargando...</p>
+
+      <div class="list" *ngIf="selectedClientId && !loadingWorkouts">
+        <button
+          class="list-item"
+          *ngFor="let workout of workouts"
+          [class.active]="selectedWorkoutId === workout.id"
+          (click)="selectWorkout(workout.id)"
+        >
+          {{ workout.name }}
+        </button>
+      </div>
+
+      <hr />
+
+      <h3>Nuevo workout</h3>
+      <form [formGroup]="createWorkoutForm" (ngSubmit)="createWorkout()" class="form-row">
+        <input type="text" placeholder="Nombre del workout" formControlName="name" />
+        <button type="submit" [disabled]="!selectedClientId">Crear</button>
+      </form>
+    </article>
+
+    <article class="card">
+      <h2>Ejercicios</h2>
+      <p class="muted" *ngIf="!selectedWorkoutId">Selecciona un workout</p>
+      <p class="muted" *ngIf="loadingExercises">Cargando...</p>
+
+      <div class="exercise-list" *ngIf="selectedWorkoutId && !loadingExercises">
+        <div class="exercise-item" *ngFor="let exercise of exercises">
+          <ng-container *ngIf="editingExerciseId !== exercise.id; else editForm">
+            <div>
+              <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
+              <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
+            </div>
+            <div class="row-actions">
+              <button class="secondary" (click)="startEdit(exercise)">Editar</button>
+              <button class="danger" (click)="deleteExercise(exercise.id)">Borrar</button>
+            </div>
+          </ng-container>
+
+          <ng-template #editForm>
+            <form [formGroup]="editExerciseForm" class="form-row compact">
+              <input type="text" formControlName="name" />
+              <div class="mini-grid">
+                <input type="number" formControlName="sets" placeholder="Sets" />
+                <input type="number" formControlName="reps" placeholder="Reps" />
+                <input type="number" formControlName="order_index" placeholder="Orden" />
+              </div>
+              <div class="row-actions">
+                <button type="button" (click)="saveEdit(exercise.id)">Guardar</button>
+                <button type="button" class="ghost" (click)="cancelEdit()">Cancelar</button>
+              </div>
+            </form>
+          </ng-template>
+        </div>
+      </div>
+
+      <hr />
+
+      <h3>Nuevo ejercicio</h3>
+      <form [formGroup]="createExerciseForm" (ngSubmit)="createExercise()" class="form-row">
+        <input type="text" placeholder="Nombre" formControlName="name" />
+        <div class="mini-grid">
+          <input type="number" placeholder="Sets" formControlName="sets" />
+          <input type="number" placeholder="Reps" formControlName="reps" />
+          <input type="number" placeholder="Orden" formControlName="order_index" />
+        </div>
+        <button type="submit" [disabled]="!selectedWorkoutId">Crear</button>
+      </form>
+    </article>
+  </section>
+</section>

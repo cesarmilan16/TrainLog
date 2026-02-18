@@ -197,5 +197,8 @@ function getManagerDashboard(userId, managerId) {
     };
 };
 
+// Función para eliminar
+
+
 
 module.exports = { newWorkout, getMyWorkouts, getWorkoutsManager, getUserDashboard, getManagerDashboard };

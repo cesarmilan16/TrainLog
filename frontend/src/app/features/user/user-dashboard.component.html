@@ -1,0 +1,42 @@
+<section class="container user">
+  <header class="card topbar">
+    <div>
+      <h1>Mi dashboard</h1>
+      <p class="muted">Tus workouts y último progreso por ejercicio</p>
+    </div>
+    <button class="ghost" (click)="logout()">Cerrar sesión</button>
+  </header>
+
+  <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  <p class="muted" *ngIf="loading">Cargando dashboard...</p>
+
+  <section class="grid workouts" *ngIf="!loading">
+    <article class="card" *ngFor="let workout of dashboard">
+      <h2>{{ workout.name }}</h2>
+
+      <div class="exercise" *ngFor="let exercise of workout.exercises">
+        <div>
+          <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
+          <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
+          <p class="muted" *ngIf="exercise.last_log">
+            Último log: {{ exercise.last_log.weight }}kg x {{ exercise.last_log.reps }} reps ({{ exercise.last_log.date | date:'short' }})
+          </p>
+          <p class="muted" *ngIf="!exercise.last_log">Sin logs todavía</p>
+        </div>
+
+        <button class="secondary" (click)="openLog(exercise.id)">Registrar log</button>
+
+        <form class="form-row inline" *ngIf="openedExerciseId === exercise.id" [formGroup]="logForm">
+          <div class="two-col">
+            <input type="number" placeholder="Peso (kg)" formControlName="weight" />
+            <input type="number" placeholder="Reps" formControlName="reps" />
+          </div>
+          <div class="row-actions">
+            <button type="button" (click)="saveLog(exercise.id)">Guardar</button>
+            <button type="button" class="ghost" (click)="openedExerciseId = null">Cancelar</button>
+          </div>
+        </form>
+      </div>
+    </article>
+  </section>
+</section>

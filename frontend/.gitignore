@@ -1,6 +1,14 @@
 # Dependencies
 node_modules/
 
+# Angular build/cache
+.angular/
+dist/
+out-tsc/
+
+# Testing / coverage
+coverage/
+
 # Logs
 *.log
 npm-debug.log*
@@ -12,11 +20,6 @@ pnpm-debug.log*
 .env
 .env.*
 !.env.example
-
-# Local databases
-*.db
-*.sqlite
-*.sqlite3
 
 # Editor / OS
 .DS_Store

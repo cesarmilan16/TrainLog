@@ -1,0 +1,25 @@
+<section class="container login-wrap">
+  <div class="card login-card">
+    <p class="eyebrow">TrainLog</p>
+    <h1>Iniciar sesión</h1>
+    <p class="muted">Accede con tu cuenta manager o usuario.</p>
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
+      <div>
+        <label for="email">Email</label>
+        <input id="email" type="email" formControlName="email" placeholder="demo@trainlog.com" />
+      </div>
+
+      <div>
+        <label for="password">Password</label>
+        <input id="password" type="password" formControlName="password" placeholder="******" />
+      </div>
+
+      <button type="submit" [disabled]="loading">
+        {{ loading ? 'Entrando...' : 'Entrar' }}
+      </button>
+
+      <p class="error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    </form>
+  </div>
+</section>

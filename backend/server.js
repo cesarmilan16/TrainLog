@@ -3,7 +3,7 @@ require('dotenv').config();
 const app = require('./app');
 const { initSchema, seedExampleData } = require('./data/db');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 
 initSchema();
 seedExampleData();

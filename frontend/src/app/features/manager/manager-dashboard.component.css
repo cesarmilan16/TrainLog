@@ -30,11 +30,11 @@
 
 .panel {
   padding: 1rem;
-  transition: transform 120ms ease, box-shadow 120ms ease;
+  transition: box-shadow 120ms ease;
 }
 
 .panel:hover {
-  transform: translateY(-2px);
+  transform: none;
 }
 
 .list,
@@ -158,13 +158,79 @@
   background: #fff;
   border-radius: 12px;
   padding: 0.65rem;
-  border-left: 4px solid #7dd3fc;
+  border-left: 4px solid #6aa989;
+}
+
+.exercise-detail-shell {
+  min-height: 120px;
+  position: relative;
+}
+
+.workout-detail-shell {
+  min-height: 120px;
+  position: relative;
+}
+
+.loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(1px);
+  border-radius: 12px;
+  z-index: 2;
+  pointer-events: none;
 }
 
 .row-actions {
   display: flex;
   gap: 0.45rem;
   margin-top: 0.55rem;
+}
+
+.field {
+  display: grid;
+  gap: 0.28rem;
+}
+
+.action-btn {
+  border-radius: 999px;
+  min-height: 34px;
+  padding: 0.42rem 0.85rem;
+  font-size: 0.83rem;
+  letter-spacing: 0;
+  font-weight: 700;
+  border: 1px solid transparent;
+  box-shadow: none;
+  transition: background-color 130ms ease, border-color 130ms ease, color 130ms ease;
+}
+
+.action-btn:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.action-btn--save {
+  background: #dcfce7;
+  color: #166534;
+  border-color: #86efac;
+}
+
+.action-btn--save:hover {
+  background: #bbf7d0;
+  border-color: #4ade80;
+}
+
+.action-btn--cancel {
+  background: #f8fafc;
+  color: #334155;
+  border-color: #cbd5e1;
+}
+
+.action-btn--cancel:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
 }
 
 .mini-grid {
@@ -290,6 +356,11 @@ hr {
 
   .modal-card {
     width: 100%;
+  }
+
+  .exercise-detail-shell,
+  .workout-detail-shell {
+    min-height: 100px;
   }
 }
 

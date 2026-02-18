@@ -7,6 +7,7 @@ const { handleResult } = require('../utils/respond');
 
 const router = express.Router();
 
+// Todas las rutas de ejercicios requieren sesión y rol MANAGER.
 router.post('/', auth, authorize('MANAGER'), (req, res) => {
   const result = addExercise(req.body, req.user.id);
   return handleResult(res, result, (data) => ({ message: data.message, id: data.id }), 201);

@@ -21,6 +21,7 @@ function registrerUser(user, managerId) {
   }
 
   try {
+    // Nunca se guarda password en texto plano.
     const hashedPassword = bcrypt.hashSync(password, 10);
 
     const result = db
@@ -99,6 +100,7 @@ function getManagerClients(managerId) {
       .prepare('SELECT id, email, name FROM users WHERE manager_id = ?')
       .all(managerId);
 
+    // Evita N+1 de consultas preparándolas una sola vez.
     const workoutsCountStmt = db.prepare('SELECT COUNT(*) AS total FROM workouts WHERE user_id = ?');
     const lastActivityStmt = db.prepare('SELECT MAX(date) AS last_activity FROM exercise_logs WHERE user_id = ?');
 
@@ -133,6 +135,7 @@ function updateClient(userId, payload, managerId) {
     };
   }
 
+  // El manager solo puede editar usuarios con role USER bajo su manager_id.
   const ownedClient = db
     .prepare('SELECT id FROM users WHERE id = ? AND manager_id = ? AND role = ?')
     .get(id, managerId, 'USER');
@@ -233,6 +236,7 @@ function deleteClient(userId, managerId) {
     };
   }
 
+  // Confirma ownership antes del borrado cascada manual.
   const ownedClient = db
     .prepare('SELECT id FROM users WHERE id = ? AND manager_id = ? AND role = ?')
     .get(id, managerId, 'USER');
@@ -245,6 +249,7 @@ function deleteClient(userId, managerId) {
   }
 
   try {
+    // Se ejecuta en transacción para evitar estado intermedio inconsistente.
     const tx = db.transaction(() => {
       db.prepare('DELETE FROM exercise_logs WHERE user_id = ?').run(id);
       db.prepare('DELETE FROM workouts WHERE user_id = ?').run(id);

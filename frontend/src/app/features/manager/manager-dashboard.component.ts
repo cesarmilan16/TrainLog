@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, ChangeDetectorRef, Component, HostListener, On
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
+import { animate, style, transition, trigger } from '@angular/animations';
 
 import { AuthService } from '../../core/services/auth.service';
 import { ManagerService } from '../../core/services/manager.service';
@@ -13,7 +14,20 @@ import { Exercise, ManagerClient, Workout } from '../../core/models';
   imports: [ReactiveFormsModule],
   templateUrl: './manager-dashboard.component.html',
   styleUrl: './manager-dashboard.component.css',
-  changeDetection: ChangeDetectionStrategy.OnPush
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    // Entrada/salida suave para los bloques de detalle al cambiar selección.
+    trigger('detailFadeSlide', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(8px)' }),
+        animate('180ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
+      ]),
+      transition(':leave', [
+        style({ opacity: 1, transform: 'translateY(0)' }),
+        animate('160ms ease-in', style({ opacity: 0, transform: 'translateY(6px)' }))
+      ])
+    ])
+  ]
 })
 export class ManagerDashboardComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
@@ -32,6 +46,7 @@ export class ManagerDashboardComponent implements OnInit {
 
   openClientMenuId: number | null = null;
   openWorkoutMenuId: number | null = null;
+  openExerciseMenuId: number | null = null;
 
   loadingClients = false;
   loadingWorkouts = false;
@@ -136,6 +151,7 @@ export class ManagerDashboardComponent implements OnInit {
   selectClient(clientId: number): void {
     this.selectedClientId = clientId;
     this.selectedWorkoutId = null;
+    // Evita mostrar workouts del cliente anterior mientras llega la nueva carga.
     this.workouts = [];
     this.exercises = [];
     this.closeMenus();
@@ -145,6 +161,7 @@ export class ManagerDashboardComponent implements OnInit {
   openClientMenu(clientId: number, event: MouseEvent): void {
     event.stopPropagation();
     this.openWorkoutMenuId = null;
+    this.openExerciseMenuId = null;
     this.openClientMenuId = this.openClientMenuId === clientId ? null : clientId;
     this.cdr.markForCheck();
   }
@@ -152,13 +169,24 @@ export class ManagerDashboardComponent implements OnInit {
   openWorkoutMenu(workoutId: number, event: MouseEvent): void {
     event.stopPropagation();
     this.openClientMenuId = null;
+    this.openExerciseMenuId = null;
     this.openWorkoutMenuId = this.openWorkoutMenuId === workoutId ? null : workoutId;
+    this.cdr.markForCheck();
+  }
+
+  openExerciseMenu(exerciseId: number, event: MouseEvent): void {
+    event.stopPropagation();
+    // Solo un menú contextual abierto a la vez.
+    this.openClientMenuId = null;
+    this.openWorkoutMenuId = null;
+    this.openExerciseMenuId = this.openExerciseMenuId === exerciseId ? null : exerciseId;
     this.cdr.markForCheck();
   }
 
   closeMenus(): void {
     this.openClientMenuId = null;
     this.openWorkoutMenuId = null;
+    this.openExerciseMenuId = null;
   }
 
   openEditClientModal(client: ManagerClient): void {
@@ -443,6 +471,7 @@ export class ManagerDashboardComponent implements OnInit {
   }
 
   startEdit(exercise: Exercise): void {
+    this.closeMenus();
     this.editingExerciseId = exercise.id;
     this.editExerciseForm.reset({
       name: exercise.name,
@@ -456,6 +485,7 @@ export class ManagerDashboardComponent implements OnInit {
 
   cancelEdit(): void {
     this.editingExerciseId = null;
+    this.closeMenus();
   }
 
   saveEdit(exerciseId: number): void {
@@ -493,6 +523,7 @@ export class ManagerDashboardComponent implements OnInit {
 
     this.managerService.deleteExercise(exerciseId).subscribe({
       next: () => {
+        this.closeMenus();
         this.fetchExercises(this.selectedWorkoutId as number);
         this.cdr.markForCheck();
       },

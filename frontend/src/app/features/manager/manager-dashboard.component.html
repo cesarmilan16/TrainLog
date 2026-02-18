@@ -82,43 +82,49 @@
       @if (!selectedClientId) {
         <p class="muted empty">Selecciona un cliente para ver sus workouts.</p>
       }
-      @if (loadingWorkouts) {
-        <p class="muted">Cargando...</p>
-      }
 
-      @if (selectedClientId && !loadingWorkouts && workouts.length === 0) {
-        <p class="muted empty">Este cliente todavía no tiene workouts.</p>
-      }
+      @if (selectedClientId) {
+        <div class="workout-detail-shell">
+          @if (loadingWorkouts) {
+            <div class="loading-overlay muted">Cargando...</div>
+          }
 
-      @if (selectedClientId && !loadingWorkouts) {
-        <div class="list">
-          @for (workout of workouts; track workout.id) {
-            <div class="list-row" (click)="$event.stopPropagation()">
-              <button
-                class="list-item"
-                [class.active]="selectedWorkoutId === workout.id"
-                (click)="selectWorkout(workout.id)"
-              >
-                <span class="title">{{ workout.name }}</span>
-              </button>
+          <!-- Forzamos recreación del bloque al cambiar cliente para disparar :leave/:enter. -->
+          @for (clientKey of [selectedClientId]; track clientKey) {
+            <div class="list" @detailFadeSlide>
+              @if (!loadingWorkouts && workouts.length === 0) {
+                <p class="muted empty">Este cliente todavía no tiene workouts.</p>
+              }
 
-              <div class="menu-wrap">
-                <button
-                  type="button"
-                  class="menu-trigger"
-                  aria-label="Opciones entrenamiento"
-                  (click)="openWorkoutMenu(workout.id, $event)"
-                >
-                  ⋯
-                </button>
+              @for (workout of workouts; track workout.id) {
+                <div class="list-row" (click)="$event.stopPropagation()">
+                  <button
+                    class="list-item"
+                    [class.active]="selectedWorkoutId === workout.id"
+                    (click)="selectWorkout(workout.id)"
+                  >
+                    <span class="title">{{ workout.name }}</span>
+                  </button>
 
-                @if (openWorkoutMenuId === workout.id) {
-                  <div class="menu-dropdown">
-                    <button type="button" class="menu-item" (click)="openEditWorkoutModal(workout)">Editar</button>
-                    <button type="button" class="menu-item danger" (click)="openDeleteWorkoutConfirm(workout.id)">Eliminar</button>
+                  <div class="menu-wrap">
+                    <button
+                      type="button"
+                      class="menu-trigger"
+                      aria-label="Opciones entrenamiento"
+                      (click)="openWorkoutMenu(workout.id, $event)"
+                    >
+                      ⋯
+                    </button>
+
+                    @if (openWorkoutMenuId === workout.id) {
+                      <div class="menu-dropdown">
+                        <button type="button" class="menu-item" (click)="openEditWorkoutModal(workout)">Editar</button>
+                        <button type="button" class="menu-item danger" (click)="openDeleteWorkoutConfirm(workout.id)">Eliminar</button>
+                      </div>
+                    }
                   </div>
-                }
-              </div>
+                </div>
+              }
             </div>
           }
         </div>
@@ -142,52 +148,91 @@
       @if (!selectedWorkoutId) {
         <p class="muted empty">Selecciona un workout para ver sus ejercicios.</p>
       }
-      @if (loadingExercises) {
-        <p class="muted">Cargando...</p>
-      }
 
       @if (selectedWorkoutId && !loadingExercises && exercises.length === 0) {
         <p class="muted empty">Este workout no tiene ejercicios aún.</p>
       }
 
-      @if (selectedWorkoutId && !loadingExercises) {
-        <div class="exercise-list">
-          @for (exercise of exercises; track exercise.id) {
-            <div class="exercise-item">
-              @if (editingExerciseId !== exercise.id) {
-                <div>
-                  <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
-                  <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
-                  @if (exercise.rir !== null || exercise.rm_percent !== null) {
-                    <p class="muted">
-                      Intensidad:
-                      @if (exercise.rir !== null) { RIR {{ exercise.rir }} }
-                      @if (exercise.rir !== null && exercise.rm_percent !== null) { · }
-                      @if (exercise.rm_percent !== null) { {{ exercise.rm_percent }}% RM }
-                    </p>
+      @if (selectedWorkoutId) {
+        <div class="exercise-detail-shell">
+          @if (loadingExercises) {
+            <div class="loading-overlay muted">Cargando...</div>
+          }
+          <!-- Forzamos recreación del bloque al cambiar entrenamiento para animación suave. -->
+          @for (workoutKey of [selectedWorkoutId]; track workoutKey) {
+            <div class="exercise-list" @detailFadeSlide>
+              @for (exercise of exercises; track exercise.id) {
+                <div class="exercise-item">
+                  @if (editingExerciseId !== exercise.id) {
+                    <div class="list-row" (click)="$event.stopPropagation()">
+                      <div>
+                        <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
+                        <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
+                        @if (exercise.rir !== null || exercise.rm_percent !== null) {
+                          <p class="muted">
+                            Intensidad:
+                            @if (exercise.rir !== null) { RIR {{ exercise.rir }} }
+                            @if (exercise.rir !== null && exercise.rm_percent !== null) { · }
+                            @if (exercise.rm_percent !== null) { {{ exercise.rm_percent }}% RM }
+                          </p>
+                        }
+                      </div>
+
+                      <div class="menu-wrap">
+                        <button
+                          type="button"
+                          class="menu-trigger"
+                          aria-label="Opciones ejercicio"
+                          (click)="openExerciseMenu(exercise.id, $event)"
+                        >
+                          ⋯
+                        </button>
+
+                        @if (openExerciseMenuId === exercise.id) {
+                          <div class="menu-dropdown">
+                            <button type="button" class="menu-item" (click)="startEdit(exercise)">Editar</button>
+                            <button type="button" class="menu-item danger" (click)="deleteExercise(exercise.id)">Eliminar</button>
+                          </div>
+                        }
+                      </div>
+                    </div>
+                  } @else {
+                    <form [formGroup]="editExerciseForm" class="form-row compact">
+                      <div class="field">
+                        <label [for]="'edit-exercise-name-' + exercise.id">Nombre</label>
+                        <input [id]="'edit-exercise-name-' + exercise.id" type="text" formControlName="name" placeholder="Ej. Press banca" />
+                      </div>
+                      <div class="mini-grid mini-grid-main">
+                        <div class="field">
+                          <label [for]="'edit-exercise-sets-' + exercise.id">Series</label>
+                          <input [id]="'edit-exercise-sets-' + exercise.id" type="number" formControlName="sets" placeholder="3" />
+                        </div>
+                        <div class="field">
+                          <label [for]="'edit-exercise-reps-' + exercise.id">Repeticiones</label>
+                          <input [id]="'edit-exercise-reps-' + exercise.id" type="number" formControlName="reps" placeholder="10" />
+                        </div>
+                        <div class="field">
+                          <label [for]="'edit-exercise-order-' + exercise.id">Orden</label>
+                          <input [id]="'edit-exercise-order-' + exercise.id" type="number" formControlName="order_index" placeholder="1" />
+                        </div>
+                      </div>
+                      <div class="mini-grid mini-grid-intensity">
+                        <div class="field">
+                          <label [for]="'edit-exercise-rir-' + exercise.id">RIR</label>
+                          <input [id]="'edit-exercise-rir-' + exercise.id" type="number" formControlName="rir" placeholder="0-10" />
+                        </div>
+                        <div class="field">
+                          <label [for]="'edit-exercise-rm-' + exercise.id">Porcentaje RM</label>
+                          <input [id]="'edit-exercise-rm-' + exercise.id" type="number" formControlName="rm_percent" placeholder="1-100" />
+                        </div>
+                      </div>
+                      <div class="row-actions">
+                        <button type="button" class="action-btn action-btn--save" (click)="saveEdit(exercise.id)">Guardar</button>
+                        <button type="button" class="action-btn action-btn--cancel" (click)="cancelEdit()">Cancelar</button>
+                      </div>
+                    </form>
                   }
                 </div>
-                <div class="row-actions">
-                  <button class="secondary" (click)="startEdit(exercise)">Editar</button>
-                  <button class="danger" (click)="deleteExercise(exercise.id)">Borrar</button>
-                </div>
-              } @else {
-                <form [formGroup]="editExerciseForm" class="form-row compact">
-                  <input type="text" formControlName="name" />
-                  <div class="mini-grid mini-grid-main">
-                    <input type="number" formControlName="sets" placeholder="Series" />
-                    <input type="number" formControlName="reps" placeholder="Repeticiones" />
-                    <input type="number" formControlName="order_index" placeholder="Orden" />
-                  </div>
-                  <div class="mini-grid mini-grid-intensity">
-                    <input type="number" formControlName="rir" placeholder="RIR 0-10" />
-                    <input type="number" formControlName="rm_percent" placeholder="%RM 1-100" />
-                  </div>
-                  <div class="row-actions">
-                    <button type="button" (click)="saveEdit(exercise.id)">Guardar</button>
-                    <button type="button" class="ghost" (click)="cancelEdit()">Cancelar</button>
-                  </div>
-                </form>
               }
             </div>
           }
@@ -198,15 +243,33 @@
 
       <h3>Nuevo ejercicio</h3>
       <form [formGroup]="createExerciseForm" (ngSubmit)="createExercise()" class="form-row">
-        <input type="text" placeholder="Nombre" formControlName="name" />
+        <div class="field">
+          <label for="new-exercise-name">Nombre</label>
+          <input id="new-exercise-name" type="text" placeholder="Ej. Press banca" formControlName="name" />
+        </div>
         <div class="mini-grid mini-grid-main">
-          <input type="number" placeholder="Series" formControlName="sets" />
-          <input type="number" placeholder="Repeticiones" formControlName="reps" />
-          <input type="number" placeholder="Orden" formControlName="order_index" />
+          <div class="field">
+            <label for="new-exercise-sets">Series</label>
+            <input id="new-exercise-sets" type="number" placeholder="3" formControlName="sets" />
+          </div>
+          <div class="field">
+            <label for="new-exercise-reps">Repeticiones</label>
+            <input id="new-exercise-reps" type="number" placeholder="10" formControlName="reps" />
+          </div>
+          <div class="field">
+            <label for="new-exercise-order">Orden</label>
+            <input id="new-exercise-order" type="number" placeholder="1" formControlName="order_index" />
+          </div>
         </div>
         <div class="mini-grid mini-grid-intensity">
-          <input type="number" placeholder="RIR 0-10" formControlName="rir" />
-          <input type="number" placeholder="%RM 1-100" formControlName="rm_percent" />
+          <div class="field">
+            <label for="new-exercise-rir">RIR</label>
+            <input id="new-exercise-rir" type="number" placeholder="0-10" formControlName="rir" />
+          </div>
+          <div class="field">
+            <label for="new-exercise-rm">Porcentaje RM</label>
+            <input id="new-exercise-rm" type="number" placeholder="1-100" formControlName="rm_percent" />
+          </div>
         </div>
         <button type="submit" [disabled]="!selectedWorkoutId">Crear ejercicio</button>
       </form>

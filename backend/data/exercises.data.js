@@ -1,6 +1,7 @@
 const { db } = require('./db');
 const { parsePositiveInt, isSqliteUniqueError } = require('../utils/data.helpers');
 
+// Permite null/empty para campos opcionales (RIR, %RM) y valida rango cuando vienen informados.
 function parseNullableIntInRange(value, min, max) {
   if (value === undefined) {
     return { present: false, value: null };
@@ -49,6 +50,7 @@ function addExercise(data, managerId) {
     };
   }
 
+  // El manager solo puede crear ejercicios en entrenamientos que le pertenecen.
   const workout = db
     .prepare('SELECT id FROM workouts WHERE id = ? AND manager_id = ?')
     .get(workoutId, managerId);
@@ -99,6 +101,7 @@ function getExercises(workoutId, managerId) {
     };
   }
 
+  // Protege acceso cruzado entre managers.
   const ownership = db
     .prepare('SELECT id FROM workouts WHERE id = ? AND manager_id = ?')
     .get(id, managerId);
@@ -133,6 +136,7 @@ function deleteExercise(exerciseId, managerId) {
     };
   }
 
+  // Verifica ownership por JOIN con workouts antes de borrar.
   const ownership = db
     .prepare(`
       SELECT we.id
@@ -175,6 +179,7 @@ function updateExercise(exerciseId, data, managerId) {
     };
   }
 
+  // Validación de ownership previa a cualquier update parcial.
   const ownership = db
     .prepare(`
       SELECT we.id
@@ -278,6 +283,7 @@ function updateExercise(exerciseId, data, managerId) {
     values.push(rmPercent.value);
   }
 
+  // Se construye SQL dinámico solo con campos válidos presentes en el payload.
   if (updates.length === 0) {
     return {
       status: 400,

@@ -428,11 +428,13 @@ export class ManagerDashboardComponent implements OnInit {
       next: (exercises) => {
         this.loadingExercises = false;
         this.exercises = exercises;
+        this.setNextExerciseOrder();
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.loadingExercises = false;
         this.exercises = [];
+        this.setNextExerciseOrder();
         this.errorMessage = error.error?.message ?? 'No se pudieron cargar los ejercicios';
         this.cdr.markForCheck();
       }
@@ -557,5 +559,13 @@ export class ManagerDashboardComponent implements OnInit {
     }
 
     this.showCreateExercise = !this.showCreateExercise;
+    if (this.showCreateExercise) {
+      this.setNextExerciseOrder();
+    }
+  }
+
+  private setNextExerciseOrder(): void {
+    const maxOrder = this.exercises.reduce((max, item) => Math.max(max, item.order_index || 0), 0);
+    this.createExerciseForm.patchValue({ order_index: maxOrder + 1 });
   }
 }

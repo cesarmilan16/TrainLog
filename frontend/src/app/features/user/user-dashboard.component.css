@@ -136,12 +136,30 @@
     gap: 0.7rem;
   }
 
+  .topbar button {
+    width: 100%;
+  }
+
+  .topbar .muted {
+    margin-bottom: 0;
+  }
+
   .workouts {
     grid-template-columns: 1fr;
+    gap: 0.7rem;
   }
 
   .workout-card {
     padding: 0.85rem;
+  }
+
+  .exercise {
+    padding: 0.65rem;
+  }
+
+  .log-chip {
+    width: 100%;
+    justify-content: center;
   }
 
   .two-col {

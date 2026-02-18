@@ -27,6 +27,15 @@ body {
   min-height: 100%;
 }
 
+body,
+app-root {
+  min-height: 100dvh;
+}
+
+app-root {
+  display: block;
+}
+
 body {
   font-family: 'Manrope', 'Segoe UI', sans-serif;
   background:

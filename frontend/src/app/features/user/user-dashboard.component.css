@@ -76,6 +76,18 @@
   line-height: 1.15;
 }
 
+.workout-count-chip {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.12rem 0.56rem;
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #0b7285;
+  background: #e6f9ff;
+  border: 1px solid #b3ecff;
+}
+
 .collapsed-hint {
   margin-top: 0.7rem;
 }

@@ -20,7 +20,14 @@
       </div>
 
       @if (loadingClients) {
-        <p class="muted">Cargando...</p>
+        <div class="list skeleton-list" aria-hidden="true">
+          @for (row of [1, 2, 3, 4]; track row) {
+            <div class="list-row">
+              <div class="skeleton-item"></div>
+              <div class="skeleton-dot"></div>
+            </div>
+          }
+        </div>
       }
 
       @if (!loadingClients && clients.length === 0) {
@@ -36,7 +43,10 @@
                 [class.active]="selectedClientId === client.id"
                 (click)="selectClient(client.id)"
               >
-                <span class="title">{{ client.name }}</span>
+                <span class="title-row">
+                  <span class="title">{{ client.name }}</span>
+                  <span class="mini-chip">{{ client.workouts_count }} entrenamientos</span>
+                </span>
                 <small>{{ client.email }}</small>
               </button>
 
@@ -64,13 +74,21 @@
 
       <hr />
 
-      <h3>Nuevo cliente</h3>
-      <form [formGroup]="createClientForm" (ngSubmit)="createClient()" class="form-row">
-        <input type="text" placeholder="Nombre" formControlName="name" />
-        <input type="email" placeholder="Email" formControlName="email" />
-        <input type="password" placeholder="Password" formControlName="password" />
-        <button type="submit">Crear cliente</button>
-      </form>
+      <div class="create-section">
+        <button type="button" class="ghost create-toggle" (click)="toggleCreateSection('client')">
+          <span>Nuevo cliente</span>
+          <strong>{{ showCreateClient ? '−' : '+' }}</strong>
+        </button>
+
+        @if (showCreateClient) {
+          <form [formGroup]="createClientForm" (ngSubmit)="createClient()" class="form-row create-form">
+            <input type="text" placeholder="Nombre" formControlName="name" />
+            <input type="email" placeholder="Email" formControlName="email" />
+            <input type="password" placeholder="Password" formControlName="password" />
+            <button type="submit">Crear cliente</button>
+          </form>
+        }
+      </div>
     </article>
 
     <article class="card panel">
@@ -92,6 +110,14 @@
           <!-- Forzamos recreación del bloque al cambiar cliente para disparar :leave/:enter. -->
           @for (clientKey of [selectedClientId]; track clientKey) {
             <div class="list" @detailFadeSlide>
+              @if (loadingWorkouts && workouts.length === 0) {
+                <div class="list skeleton-list" aria-hidden="true">
+                  @for (row of [1, 2, 3]; track row) {
+                    <div class="skeleton-item"></div>
+                  }
+                </div>
+              }
+
               @if (!loadingWorkouts && workouts.length === 0) {
                 <p class="muted empty">Este cliente todavía no tiene workouts.</p>
               }
@@ -103,7 +129,10 @@
                     [class.active]="selectedWorkoutId === workout.id"
                     (click)="selectWorkout(workout.id)"
                   >
-                    <span class="title">{{ workout.name }}</span>
+                    <span class="title-row">
+                      <span class="title">{{ workout.name }}</span>
+                      <span class="mini-chip mini-chip-soft">{{ workout.exercises_count ?? 0 }} ejercicios</span>
+                    </span>
                   </button>
 
                   <div class="menu-wrap">
@@ -132,11 +161,19 @@
 
       <hr />
 
-      <h3>Nuevo workout</h3>
-      <form [formGroup]="createWorkoutForm" (ngSubmit)="createWorkout()" class="form-row">
-        <input type="text" placeholder="Nombre del workout" formControlName="name" />
-        <button type="submit" [disabled]="!selectedClientId">Crear workout</button>
-      </form>
+      <div class="create-section">
+        <button type="button" class="ghost create-toggle" (click)="toggleCreateSection('workout')">
+          <span>Nuevo workout</span>
+          <strong>{{ showCreateWorkout ? '−' : '+' }}</strong>
+        </button>
+
+        @if (showCreateWorkout) {
+          <form [formGroup]="createWorkoutForm" (ngSubmit)="createWorkout()" class="form-row create-form">
+            <input type="text" placeholder="Nombre del workout" formControlName="name" />
+            <button type="submit" [disabled]="!selectedClientId">Crear workout</button>
+          </form>
+        }
+      </div>
     </article>
 
     <article class="card panel">
@@ -161,6 +198,14 @@
           <!-- Forzamos recreación del bloque al cambiar entrenamiento para animación suave. -->
           @for (workoutKey of [selectedWorkoutId]; track workoutKey) {
             <div class="exercise-list" @detailFadeSlide>
+              @if (loadingExercises && exercises.length === 0) {
+                <div class="exercise-list skeleton-list" aria-hidden="true">
+                  @for (row of [1, 2, 3]; track row) {
+                    <div class="skeleton-item"></div>
+                  }
+                </div>
+              }
+
               @for (exercise of exercises; track exercise.id) {
                 <div class="exercise-item">
                   @if (editingExerciseId !== exercise.id) {
@@ -241,38 +286,46 @@
 
       <hr />
 
-      <h3>Nuevo ejercicio</h3>
-      <form [formGroup]="createExerciseForm" (ngSubmit)="createExercise()" class="form-row">
-        <div class="field">
-          <label for="new-exercise-name">Nombre</label>
-          <input id="new-exercise-name" type="text" placeholder="Ej. Press banca" formControlName="name" />
-        </div>
-        <div class="mini-grid mini-grid-main">
-          <div class="field">
-            <label for="new-exercise-sets">Series</label>
-            <input id="new-exercise-sets" type="number" placeholder="3" formControlName="sets" />
-          </div>
-          <div class="field">
-            <label for="new-exercise-reps">Repeticiones</label>
-            <input id="new-exercise-reps" type="number" placeholder="10" formControlName="reps" />
-          </div>
-          <div class="field">
-            <label for="new-exercise-order">Orden</label>
-            <input id="new-exercise-order" type="number" placeholder="1" formControlName="order_index" />
-          </div>
-        </div>
-        <div class="mini-grid mini-grid-intensity">
-          <div class="field">
-            <label for="new-exercise-rir">RIR</label>
-            <input id="new-exercise-rir" type="number" placeholder="0-10" formControlName="rir" />
-          </div>
-          <div class="field">
-            <label for="new-exercise-rm">Porcentaje RM</label>
-            <input id="new-exercise-rm" type="number" placeholder="1-100" formControlName="rm_percent" />
-          </div>
-        </div>
-        <button type="submit" [disabled]="!selectedWorkoutId">Crear ejercicio</button>
-      </form>
+      <div class="create-section">
+        <button type="button" class="ghost create-toggle" (click)="toggleCreateSection('exercise')">
+          <span>Nuevo ejercicio</span>
+          <strong>{{ showCreateExercise ? '−' : '+' }}</strong>
+        </button>
+
+        @if (showCreateExercise) {
+          <form [formGroup]="createExerciseForm" (ngSubmit)="createExercise()" class="form-row create-form">
+            <div class="field">
+              <label for="new-exercise-name">Nombre</label>
+              <input id="new-exercise-name" type="text" placeholder="Ej. Press banca" formControlName="name" />
+            </div>
+            <div class="mini-grid mini-grid-main">
+              <div class="field">
+                <label for="new-exercise-sets">Series</label>
+                <input id="new-exercise-sets" type="number" placeholder="3" formControlName="sets" />
+              </div>
+              <div class="field">
+                <label for="new-exercise-reps">Repeticiones</label>
+                <input id="new-exercise-reps" type="number" placeholder="10" formControlName="reps" />
+              </div>
+              <div class="field">
+                <label for="new-exercise-order">Orden</label>
+                <input id="new-exercise-order" type="number" placeholder="1" formControlName="order_index" />
+              </div>
+            </div>
+            <div class="mini-grid mini-grid-intensity">
+              <div class="field">
+                <label for="new-exercise-rir">RIR</label>
+                <input id="new-exercise-rir" type="number" placeholder="0-10" formControlName="rir" />
+              </div>
+              <div class="field">
+                <label for="new-exercise-rm">Porcentaje RM</label>
+                <input id="new-exercise-rm" type="number" placeholder="1-100" formControlName="rm_percent" />
+              </div>
+            </div>
+            <button type="submit" [disabled]="!selectedWorkoutId">Crear ejercicio</button>
+          </form>
+        }
+      </div>
     </article>
   </section>
 

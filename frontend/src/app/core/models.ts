@@ -29,6 +29,7 @@ export interface Workout {
   id: number;
   name: string;
   name_user?: string;
+  exercises_count?: number;
 }
 
 export interface Exercise {

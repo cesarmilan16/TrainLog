@@ -52,6 +52,9 @@ export class ManagerDashboardComponent implements OnInit {
   loadingWorkouts = false;
   loadingExercises = false;
   errorMessage = '';
+  showCreateClient = false;
+  showCreateWorkout = false;
+  showCreateExercise = false;
 
   editModalOpen = false;
   editModalTitle = '';
@@ -138,6 +141,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.managerService.createClient(this.createClientForm.getRawValue()).subscribe({
       next: () => {
         this.createClientForm.reset({ name: '', email: '', password: '' });
+        this.showCreateClient = false;
         this.fetchClients();
         this.cdr.markForCheck();
       },
@@ -375,6 +379,7 @@ export class ManagerDashboardComponent implements OnInit {
       .subscribe({
         next: () => {
           this.createWorkoutForm.reset({ name: '' });
+          this.showCreateWorkout = false;
           this.fetchWorkouts(this.selectedClientId as number);
           this.cdr.markForCheck();
         },
@@ -460,6 +465,7 @@ export class ManagerDashboardComponent implements OnInit {
             rm_percent: null,
             order_index: null
           });
+          this.showCreateExercise = false;
           this.fetchExercises(this.selectedWorkoutId as number);
           this.cdr.markForCheck();
         },
@@ -537,5 +543,19 @@ export class ManagerDashboardComponent implements OnInit {
   logout(): void {
     this.authService.logout();
     this.router.navigateByUrl('/login');
+  }
+
+  toggleCreateSection(section: 'client' | 'workout' | 'exercise'): void {
+    if (section === 'client') {
+      this.showCreateClient = !this.showCreateClient;
+      return;
+    }
+
+    if (section === 'workout') {
+      this.showCreateWorkout = !this.showCreateWorkout;
+      return;
+    }
+
+    this.showCreateExercise = !this.showCreateExercise;
   }
 }

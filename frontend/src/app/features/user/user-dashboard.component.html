@@ -34,13 +34,13 @@
               >
                 <span>
                   <strong class="workout-title">{{ workout.name }}</strong>
-                  <small class="muted">{{ workout.exercises.length }} ejercicios</small>
+                  <small><span class="workout-count-chip">{{ workout.exercises.length }} ejercicios</span></small>
                 </span>
                 <strong>{{ isWorkoutExpanded(workout.id) ? '−' : '+' }}</strong>
               </button>
             } @else {
               <h2>{{ workout.name }}</h2>
-              <span class="muted">{{ workout.exercises.length }} ejercicios</span>
+              <span class="workout-count-chip">{{ workout.exercises.length }} ejercicios</span>
             }
           </div>
 

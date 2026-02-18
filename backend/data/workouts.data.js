@@ -74,10 +74,16 @@ function getWorkoutsManager(userId, managerId) {
 
   const workouts = db
     .prepare(`
-      SELECT workouts.id, workouts.name, users.email AS name_user
+      SELECT
+        workouts.id,
+        workouts.name,
+        users.email AS name_user,
+        COUNT(workout_exercises.id) AS exercises_count
       FROM workouts
       JOIN users ON workouts.user_id = users.id
+      LEFT JOIN workout_exercises ON workout_exercises.workout_id = workouts.id
       WHERE workouts.user_id = ? AND workouts.manager_id = ?
+      GROUP BY workouts.id, workouts.name, users.email
       ORDER BY workouts.id DESC
     `)
     .all(parsedUserId, managerId);

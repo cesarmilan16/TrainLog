@@ -8,8 +8,9 @@ services:
       NODE_ENV: production
       PORT: 3000
       JWT_SECRET: change_me_in_production
+      DB_PATH: /app/data/trainlog.db
     volumes:
-      - trainlog_data:/app/trainlog.db
+      - trainlog_data:/app/data
     expose:
       - "3000"
     restart: unless-stopped

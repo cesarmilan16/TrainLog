@@ -11,7 +11,7 @@ const app = require('../src/app');
 const jwt = require('jsonwebtoken');
 const auth = require('../src/middleware/auth');
 const { initSchema, seedExampleData, closeDb } = require('../src/config/database/db');
-const { login } = require('../src/repositories/users.repository');
+const { login } = require('../src/services/users.service');
 
 function createMockRes() {
   return {

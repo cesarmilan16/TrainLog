@@ -2,8 +2,8 @@ const usersService = require('../services/users.service');
 const { handleResult } = require('../shared/utils/respond');
 
 function getUsers(_req, res) {
-  const users = usersService.getUsers();
-  return res.json(users);
+  const result = usersService.getUsers();
+  return handleResult(res, result, (data) => data);
 }
 
 function registrerUser(req, res) {
@@ -27,12 +27,11 @@ function login(req, res) {
 }
 
 function getClients(req, res) {
-  const data = usersService.getClients(req.user.id);
-
-  return res.status(200).json({
+  const result = usersService.getClients(req.user.id);
+  return handleResult(res, result, (data) => ({
     message: 'Lista de clientes',
     data
-  });
+  }));
 }
 
 function getProfile(req, res) {

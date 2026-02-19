@@ -8,7 +8,7 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'test-secret';
 process.env.DB_PATH = path.join(os.tmpdir(), `trainlog-logs-test-${process.pid}.db`);
 
 const { db, initSchema, seedExampleData, closeDb } = require('../src/config/database/db');
-const { addLog, getLog, getLastLog } = require('../src/repositories/exerciseLogs.repository');
+const { addLog, getLog, getLastLog } = require('../src/services/exerciseLogs.service');
 
 let demoUserId;
 let otherUserId;

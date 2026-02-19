@@ -446,12 +446,14 @@ export class ManagerDashboardComponent implements OnInit {
       next: (exercises) => {
         this.loadingExercises = false;
         this.exercises = exercises;
+        this.syncSelectedWorkoutExerciseCount(exercises.length);
         this.setNextExerciseOrder();
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
         this.loadingExercises = false;
         this.exercises = [];
+        this.syncSelectedWorkoutExerciseCount(0);
         this.setNextExerciseOrder();
         this.errorMessage = error.error?.message ?? 'No se pudieron cargar los ejercicios';
         this.cdr.markForCheck();
@@ -692,5 +694,17 @@ export class ManagerDashboardComponent implements OnInit {
   private setNextExerciseOrder(): void {
     const maxOrder = this.exercises.reduce((max, item) => Math.max(max, item.order_index || 0), 0);
     this.createExerciseForm.patchValue({ order_index: maxOrder + 1 });
+  }
+
+  private syncSelectedWorkoutExerciseCount(count: number): void {
+    if (!this.selectedWorkoutId) {
+      return;
+    }
+
+    this.workouts = this.workouts.map((workout) =>
+      workout.id === this.selectedWorkoutId
+        ? { ...workout, exercises_count: count }
+        : workout
+    );
   }
 }

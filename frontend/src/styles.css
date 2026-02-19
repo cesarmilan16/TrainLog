@@ -26,6 +26,11 @@ html,
 body {
   margin: 0;
   min-height: 100%;
+  background:
+    radial-gradient(70rem 30rem at -10% -15%, #d9e8f8, transparent 58%),
+    radial-gradient(62rem 30rem at 110% -20%, #ebfbe0, transparent 55%),
+    linear-gradient(180deg, var(--bg), var(--bg-2));
+  background-color: var(--bg);
 }
 
 body,
@@ -39,6 +44,7 @@ app-root {
 
 body {
   font-family: 'Outfit', 'Segoe UI', sans-serif;
+  overscroll-behavior-y: none;
   background:
     radial-gradient(70rem 30rem at -10% -15%, #d9e8f8, transparent 58%),
     radial-gradient(62rem 30rem at 110% -20%, #ebfbe0, transparent 55%),

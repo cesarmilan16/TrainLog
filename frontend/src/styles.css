@@ -172,6 +172,7 @@ body.dark .theme-toggle .icon-sun {
 html.dark .theme-toggle .icon-moon,
 body.dark .theme-toggle .icon-moon {
   display: block;
+  color: #ffffff;
 }
 
 input,

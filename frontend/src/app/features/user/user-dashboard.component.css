@@ -1,5 +1,5 @@
 .user {
-  padding-block: 1rem 2.1rem;
+  padding-block: 1.2rem 2.4rem;
 }
 
 .topbar {
@@ -12,13 +12,20 @@
   z-index: 10;
   backdrop-filter: blur(10px);
   background:
-    radial-gradient(24rem 12rem at 0% 0%, rgba(132, 204, 22, 0.14), transparent 60%),
-    var(--panel);
+    radial-gradient(24rem 12rem at 0% 0%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, transparent), var(--color-surface-soft));
 }
 
 .topbar h1 {
   margin-top: 0.35rem;
   font-size: clamp(1.45rem, 2.4vw, 2rem);
+}
+
+.topbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .top-metrics {
@@ -35,9 +42,9 @@
   padding: 0.2rem 0.6rem;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #1f2937;
-  background: #ecfccb;
-  border: 1px solid #bef264;
+  color: color-mix(in srgb, var(--color-primary-strong) 60%, var(--color-text));
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
 }
 
 .app-error {
@@ -46,27 +53,23 @@
 
 .empty-state {
   margin-top: 1rem;
-  border: 1px dashed var(--border);
+  border: 1px dashed var(--color-border);
   border-radius: 14px;
-  background: var(--panel-soft);
+  background: var(--color-surface-soft);
   padding: 0.9rem;
 }
 
 .workouts {
-  margin-top: 1rem;
+  margin-top: 1.2rem;
+  gap: 1.1rem;
   grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
 }
 
 .workout-card {
   padding: 1rem;
   background:
-    radial-gradient(24rem 10rem at 100% 0%, rgba(132, 204, 22, 0.12), transparent 55%),
-    linear-gradient(180deg, #fff 0%, #f8fbfd 100%);
-  transition: transform 140ms ease;
-}
-
-.workout-card:hover {
-  transform: translateY(-2px);
+    radial-gradient(24rem 10rem at 100% 0%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-soft) 100%);
 }
 
 .workout-card h2 {
@@ -80,22 +83,19 @@
   justify-content: space-between;
   gap: 0.7rem;
   text-align: left;
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--border);
-  box-shadow: none;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
 }
 
 .workout-toggle:hover {
-  transform: none;
-  box-shadow: none;
-  border-color: #b7ca8c;
-  background: #f7fbef;
+  border-color: color-mix(in srgb, var(--color-primary) 40%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
 }
 
 .workout-toggle.open {
-  border-color: #a3c458;
-  background: #f4fadf;
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 16%, var(--color-surface));
 }
 
 .workout-title {
@@ -112,9 +112,9 @@
   padding: 0.12rem 0.56rem;
   font-size: 0.73rem;
   font-weight: 700;
-  color: #365314;
-  background: #ecfccb;
-  border: 1px solid #d9f99d;
+  color: color-mix(in srgb, var(--color-primary-strong) 60%, var(--color-text));
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
 }
 
 .collapsed-hint {
@@ -122,17 +122,37 @@
 }
 
 .exercise {
-  border: 1px solid #d6e2e9;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: #fff;
+  background: var(--color-surface);
   padding: 0.8rem;
   margin-bottom: 0.72rem;
-  border-left: 4px solid #84cc16;
+  border-left: 4px solid var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+.exercise-content {
+  display: grid;
+  gap: 0.16rem;
+}
+
+.exercise-name {
+  font-size: 1.04rem;
+  line-height: 1.18;
+}
+
+.exercise-main {
+  color: var(--color-text);
+  font-size: 0.92rem;
+}
+
+.exercise-meta {
+  font-size: 0.82rem;
 }
 
 .log-chip {
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
   border-radius: 999px;
   padding: 0.28rem 0.6rem;
   display: inline-flex;
@@ -157,12 +177,13 @@
   display: flex;
   gap: 0.45rem;
   flex-wrap: wrap;
+  margin-top: 0.65rem;
 }
 
 .sheet-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.5);
+  background: color-mix(in srgb, #020617 70%, transparent);
   backdrop-filter: blur(3px);
   z-index: 70;
   display: grid;
@@ -190,37 +211,30 @@
   text-transform: uppercase;
   letter-spacing: 0.06em;
   font-weight: 700;
-  color: #4d7c0f;
+  color: color-mix(in srgb, var(--color-primary-strong) 70%, var(--color-text));
 }
 
 .close-btn {
   min-height: 36px;
 }
 
-.range-switch {
+.range-switch,
+.metric-switch {
   margin-top: 0.8rem;
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
 }
 
-.range-switch .ghost.active {
-  background: #ecfccb;
-  border-color: #bef264;
-  color: #3f6212;
-}
-
 .metric-switch {
   margin-top: 0.5rem;
-  display: flex;
-  gap: 0.4rem;
-  flex-wrap: wrap;
 }
 
+.range-switch .ghost.active,
 .metric-switch .ghost.active {
-  background: #111827;
-  border-color: #111827;
-  color: #ecfccb;
+  background: color-mix(in srgb, var(--color-primary) 18%, var(--color-surface));
+  border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
+  color: color-mix(in srgb, var(--color-primary-strong) 70%, var(--color-text));
 }
 
 .kpis {
@@ -231,16 +245,16 @@
 }
 
 .kpi {
-  border: 1px solid #d7e3ea;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-surface);
   padding: 0.62rem;
   display: grid;
   gap: 0.2rem;
 }
 
 .kpi small {
-  color: var(--muted);
+  color: var(--color-text-muted);
   font-size: 0.74rem;
   font-weight: 600;
 }
@@ -250,18 +264,18 @@
 }
 
 .trend-up {
-  color: #166534;
+  color: color-mix(in srgb, var(--color-primary-strong) 70%, var(--color-text));
 }
 
 .trend-down {
-  color: #b91c1c;
+  color: var(--color-danger);
 }
 
 .chart-card {
   margin-top: 0.9rem;
-  border: 1px solid #d6e2e9;
+  border: 1px solid var(--color-border);
   border-radius: 14px;
-  background: linear-gradient(180deg, #ffffff, #f8fbfd);
+  background: linear-gradient(180deg, var(--color-surface), var(--color-surface-soft));
   padding: 0.62rem;
 }
 
@@ -272,23 +286,23 @@
 }
 
 .chart-grid line {
-  stroke: #d9e3ec;
+  stroke: color-mix(in srgb, var(--color-text-muted) 30%, var(--color-border));
   stroke-width: 1;
 }
 
 .chart-grid text {
-  fill: #64748b;
+  fill: var(--color-text-muted);
   font-size: 8px;
   font-weight: 600;
 }
 
 .chart-area {
-  fill: rgba(132, 204, 22, 0.16);
+  fill: color-mix(in srgb, var(--color-primary) 16%, transparent);
 }
 
 .chart-line {
   fill: none;
-  stroke: #84cc16;
+  stroke: var(--color-primary);
   stroke-width: 2.6;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -296,7 +310,7 @@
 
 .chart-line-average {
   fill: none;
-  stroke: #0f172a;
+  stroke: var(--color-text-muted);
   stroke-width: 1.8;
   stroke-linejoin: round;
   stroke-linecap: round;
@@ -305,8 +319,8 @@
 }
 
 .chart-dot {
-  fill: #1f2937;
-  stroke: #ecfccb;
+  fill: color-mix(in srgb, var(--color-text) 85%, #000);
+  stroke: color-mix(in srgb, var(--color-primary) 25%, var(--color-surface));
   stroke-width: 2;
 }
 
@@ -317,9 +331,9 @@
 }
 
 .log-row {
-  border: 1px solid #d9e3eb;
+  border: 1px solid var(--color-border);
   border-radius: 12px;
-  background: #fff;
+  background: var(--color-surface);
   padding: 0.6rem 0.68rem;
   display: flex;
   justify-content: space-between;
@@ -337,15 +351,15 @@
   justify-items: end;
   gap: 0.3rem;
   font-size: 0.78rem;
-  color: #334155;
+  color: var(--color-text-muted);
 }
 
 .pr-badge {
   border-radius: 999px;
   padding: 0.1rem 0.46rem;
-  background: #ecfccb;
-  border: 1px solid #bef264;
-  color: #3f6212;
+  background: color-mix(in srgb, var(--color-primary) 14%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
+  color: color-mix(in srgb, var(--color-primary-strong) 70%, var(--color-text));
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -363,7 +377,13 @@
     gap: 0.7rem;
   }
 
-  .topbar button {
+  .topbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .topbar-actions button {
     width: 100%;
   }
 

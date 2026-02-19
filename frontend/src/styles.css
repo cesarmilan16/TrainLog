@@ -1,22 +1,5 @@
+@import './styles/theme.css';
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap');
-
-:root {
-  color-scheme: light;
-  --bg: #f3f6f9;
-  --bg-2: #e9eef5;
-  --panel: #ffffff;
-  --panel-soft: #f7fafc;
-  --text: #111827;
-  --muted: #5b667a;
-  --brand: #101828;
-  --brand-strong: #030712;
-  --accent: #84cc16;
-  --accent-2: #22c55e;
-  --danger: #dc2626;
-  --border: #d9e2ec;
-  --shadow: 0 14px 32px rgba(8, 15, 28, 0.1);
-  --radius: 18px;
-}
 
 * {
   box-sizing: border-box;
@@ -26,11 +9,7 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background:
-    radial-gradient(70rem 30rem at -10% -15%, #d9e8f8, transparent 58%),
-    radial-gradient(62rem 30rem at 110% -20%, #ebfbe0, transparent 55%),
-    linear-gradient(180deg, var(--bg), var(--bg-2));
-  background-color: var(--bg);
+  background-color: var(--color-bg);
 }
 
 body,
@@ -44,16 +23,16 @@ app-root {
 
 body {
   font-family: 'Outfit', 'Segoe UI', sans-serif;
+  color: var(--color-text);
   overscroll-behavior-y: none;
   background:
-    radial-gradient(70rem 30rem at -10% -15%, #d9e8f8, transparent 58%),
-    radial-gradient(62rem 30rem at 110% -20%, #ebfbe0, transparent 55%),
-    linear-gradient(180deg, var(--bg), var(--bg-2));
-  color: var(--text);
+    radial-gradient(70rem 30rem at -12% -16%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 58%),
+    radial-gradient(62rem 30rem at 110% -20%, color-mix(in srgb, var(--color-primary) 8%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--color-bg), var(--color-bg-elevated));
 }
 
 ::selection {
-  background: rgba(132, 204, 22, 0.22);
+  background: color-mix(in srgb, var(--color-primary) 26%, transparent);
 }
 
 h1,
@@ -62,44 +41,60 @@ h3 {
   margin: 0;
   font-family: 'Rajdhani', 'Outfit', sans-serif;
   letter-spacing: 0.01em;
-  line-height: 1.05;
+  line-height: 1.04;
+}
+
+p {
+  margin: 0;
 }
 
 .container {
-  width: min(1220px, 94vw);
+  width: min(1320px, 94vw);
   margin: 0 auto;
 }
 
 .card {
-  background: linear-gradient(180deg, #fff 0%, #f9fbfd 100%);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1rem;
+  background: linear-gradient(180deg, var(--color-surface), var(--color-surface-soft));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--space-4);
+  transition: all 0.2s ease;
   animation: fadeInUp 220ms ease both;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
 
 .grid {
   display: grid;
-  gap: 1rem;
+  gap: var(--space-4);
 }
 
 button {
-  border: none;
+  border: 1px solid transparent;
   border-radius: 999px;
   min-height: 42px;
   padding: 0.62rem 1rem;
-  background: linear-gradient(120deg, var(--brand), var(--brand-strong));
-  color: #fff;
+  background: linear-gradient(120deg, var(--color-primary), var(--color-primary-strong));
+  color: #06240f;
   font-weight: 700;
   letter-spacing: 0.01em;
   cursor: pointer;
-  transition: transform 130ms ease, box-shadow 130ms ease, filter 130ms ease;
+  transition: all 0.2s ease;
+}
+
+html.dark button,
+body.dark button {
+  color: #05200e;
 }
 
 button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(2, 6, 23, 0.28);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-sm);
+  filter: saturate(1.05);
 }
 
 button:active {
@@ -114,47 +109,63 @@ button:disabled {
 }
 
 button.secondary {
-  background: linear-gradient(120deg, var(--accent-2), var(--accent));
-  color: #0f172a;
+  background: transparent;
+  color: var(--color-text);
+  border-color: var(--color-border-strong);
+}
+
+button.secondary:hover {
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
 }
 
 button.danger {
-  background: linear-gradient(120deg, #ef4444, #dc2626);
+  background: linear-gradient(120deg, #fb7185, #e11d48);
+  color: #fff;
 }
 
 button.ghost {
-  background: #fff;
-  color: var(--text);
-  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--color-text);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 button.ghost:hover {
-  box-shadow: 0 8px 18px rgba(12, 22, 40, 0.13);
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+  box-shadow: none;
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
-  border: 1px solid #ccd7e6;
-  border-radius: 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
   padding: 0.7rem 0.82rem;
   font-size: 0.95rem;
   font-family: inherit;
-  background: #fff;
-  transition: border-color 120ms ease, box-shadow 120ms ease;
+  color: var(--color-text);
+  background: var(--color-surface);
+  transition: all 0.2s ease;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--color-text-muted);
 }
 
 input:focus,
-select:focus {
-  border-color: #84cc16;
+select:focus,
+textarea:focus {
+  border-color: var(--color-primary);
   outline: none;
-  box-shadow: 0 0 0 4px rgba(132, 204, 22, 0.16);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 18%, transparent);
 }
 
 label {
   display: block;
   font-size: 0.82rem;
-  color: var(--muted);
+  color: var(--color-text-muted);
   margin-bottom: 0.32rem;
   font-weight: 600;
 }
@@ -165,14 +176,14 @@ label {
 }
 
 .error {
-  color: var(--danger);
+  color: var(--color-danger);
   margin-top: 0.35rem;
   font-size: 0.9rem;
   font-weight: 700;
 }
 
 .muted {
-  color: var(--muted);
+  color: var(--color-text-muted);
 }
 
 .badge {
@@ -185,8 +196,9 @@ label {
   font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  background: #111827;
-  color: #d9f99d;
+  background: color-mix(in srgb, var(--color-primary) 20%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, var(--color-border));
+  color: color-mix(in srgb, var(--color-primary-strong) 70%, var(--color-text));
 }
 
 .section-title {
@@ -209,17 +221,18 @@ label {
 
 @media (max-width: 768px) {
   .container {
-    width: min(97vw, 1220px);
+    width: min(97vw, 1320px);
   }
 
   .card {
-    border-radius: 16px;
+    border-radius: var(--radius-md);
     padding: 0.9rem;
   }
 
   button,
   input,
-  select {
+  select,
+  textarea {
     min-height: 46px;
     font-size: 1rem;
   }

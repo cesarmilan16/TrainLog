@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { UserService } from '../../core/services/user.service';
 import { DashboardWorkout, ExerciseLog } from '../../core/models';
 
@@ -19,6 +20,7 @@ import { DashboardWorkout, ExerciseLog } from '../../core/models';
 export class UserDashboardComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
   private readonly userService = inject(UserService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -36,6 +38,7 @@ export class UserDashboardComponent implements OnInit {
   progressError = '';
   progressRange: 7 | 30 | 90 | 0 = 30;
   progressMetric: 'weight' | 'erm' | 'volume' = 'erm';
+  isDarkMode = false;
   readonly chartWidth = 360;
   readonly chartHeight = 150;
   readonly chartPadding = 16;
@@ -46,8 +49,14 @@ export class UserDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.isDarkMode = this.themeService.isDarkMode();
     this.updateViewportState();
     this.fetchDashboard();
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = this.themeService.toggleTheme() === 'dark';
+    this.cdr.markForCheck();
   }
 
   @HostListener('window:resize')

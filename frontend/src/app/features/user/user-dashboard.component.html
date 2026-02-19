@@ -10,7 +10,12 @@
         <span>{{ exercisesWithLogs }} con historial</span>
       </div>
     </div>
-    <button class="ghost" (click)="logout()">Cerrar sesión</button>
+    <div class="topbar-actions">
+      <button type="button" class="secondary" (click)="toggleTheme()">
+        {{ isDarkMode ? 'Modo claro' : 'Modo oscuro' }}
+      </button>
+      <button type="button" class="ghost" (click)="logout()">Cerrar sesión</button>
+    </div>
   </header>
 
   @if (errorMessage) {
@@ -52,11 +57,11 @@
           @if (!isMobileView || isWorkoutExpanded(workout.id)) {
             @for (exercise of workout.exercises; track exercise.id) {
               <div class="exercise">
-                <div>
-                  <strong>#{{ exercise.order_index }} {{ exercise.name }}</strong>
-                  <p class="muted">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
+                <div class="exercise-content">
+                  <strong class="exercise-name">#{{ exercise.order_index }} {{ exercise.name }}</strong>
+                  <p class="exercise-main">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
                   @if (exercise.rir !== null || exercise.rm_percent !== null) {
-                    <p class="muted">
+                    <p class="exercise-meta muted">
                       Intensidad:
                       @if (exercise.rir !== null) { RIR {{ exercise.rir }} }
                       @if (exercise.rir !== null && exercise.rm_percent !== null) { · }
@@ -64,7 +69,7 @@
                     </p>
                   }
                   @if (exercise.last_log) {
-                    <p class="muted log-chip">
+                    <p class="exercise-meta muted log-chip">
                       Último: {{ exercise.last_log.weight }}kg x {{ exercise.last_log.reps }} ·
                       {{ exercise.last_log.date | date:'short' }}
                     </p>

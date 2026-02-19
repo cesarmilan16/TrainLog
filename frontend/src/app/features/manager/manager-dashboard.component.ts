@@ -6,6 +6,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
 
 import { AuthService } from '../../core/services/auth.service';
 import { ManagerService } from '../../core/services/manager.service';
+import { ThemeService } from '../../core/services/theme.service';
 import { Exercise, ManagerClient, MovementSuggestion, Workout } from '../../core/models';
 
 @Component({
@@ -33,6 +34,7 @@ export class ManagerDashboardComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
   private readonly managerService = inject(ManagerService);
+  private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
@@ -71,6 +73,7 @@ export class ManagerDashboardComponent implements OnInit {
   confirmModalMessage = '';
   confirmModalType: 'client' | 'workout' | null = null;
   confirmTargetId: number | null = null;
+  isDarkMode = false;
 
   readonly createClientForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -107,7 +110,13 @@ export class ManagerDashboardComponent implements OnInit {
   });
 
   ngOnInit(): void {
+    this.isDarkMode = this.themeService.isDarkMode();
     this.fetchClients();
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = this.themeService.toggleTheme() === 'dark';
+    this.cdr.markForCheck();
   }
 
   @HostListener('document:keydown.escape')

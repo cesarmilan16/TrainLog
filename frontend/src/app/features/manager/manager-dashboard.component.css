@@ -1,5 +1,19 @@
 .manager {
   padding-block: 1.25rem 2.4rem;
+  position: relative;
+  isolation: isolate;
+}
+
+.manager::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(42rem 20rem at -8% -2%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 62%),
+    radial-gradient(40rem 20rem at 108% 12%, rgba(59, 130, 246, 0.12), transparent 58%),
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-elevated) 35%, transparent));
 }
 
 .topbar {
@@ -12,8 +26,9 @@
   z-index: 10;
   backdrop-filter: blur(10px);
   background:
-    radial-gradient(26rem 11rem at 100% 0%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 56%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, transparent), var(--color-surface-soft));
+    radial-gradient(26rem 11rem at 100% 0%, color-mix(in srgb, var(--color-primary) 24%, transparent), transparent 56%),
+    radial-gradient(20rem 10rem at 0% 120%, rgba(59, 130, 246, 0.12), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 90%, transparent), color-mix(in srgb, var(--color-surface-soft) 86%, var(--color-bg)));
 }
 
 .topbar h1 {
@@ -61,8 +76,9 @@
 .panel {
   padding: 1.05rem;
   background:
-    radial-gradient(22rem 8rem at 100% 0%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 58%),
-    linear-gradient(180deg, var(--color-surface), var(--color-surface-soft));
+    radial-gradient(22rem 8rem at 100% 0%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 58%),
+    radial-gradient(20rem 9rem at 0% 100%, rgba(59, 130, 246, 0.1), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, transparent), color-mix(in srgb, var(--color-surface-soft) 88%, var(--color-bg)));
 }
 
 .list,

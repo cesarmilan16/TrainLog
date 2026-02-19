@@ -1,5 +1,19 @@
 .user {
   padding-block: 1.2rem 2.4rem;
+  position: relative;
+  isolation: isolate;
+}
+
+.user::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40rem 20rem at -8% -4%, color-mix(in srgb, var(--color-primary) 12%, transparent), transparent 62%),
+    radial-gradient(40rem 20rem at 108% 8%, rgba(59, 130, 246, 0.12), transparent 58%),
+    linear-gradient(180deg, transparent, color-mix(in srgb, var(--color-bg-elevated) 34%, transparent));
 }
 
 .topbar {
@@ -12,8 +26,9 @@
   z-index: 10;
   backdrop-filter: blur(10px);
   background:
-    radial-gradient(24rem 12rem at 0% 0%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 60%),
-    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 92%, transparent), var(--color-surface-soft));
+    radial-gradient(24rem 12rem at 0% 0%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 60%),
+    radial-gradient(18rem 10rem at 100% 100%, rgba(59, 130, 246, 0.12), transparent 60%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 90%, transparent), color-mix(in srgb, var(--color-surface-soft) 86%, var(--color-bg)));
 }
 
 .topbar h1 {
@@ -68,8 +83,9 @@
 .workout-card {
   padding: 1rem;
   background:
-    radial-gradient(24rem 10rem at 100% 0%, color-mix(in srgb, var(--color-primary) 14%, transparent), transparent 55%),
-    linear-gradient(180deg, var(--color-surface) 0%, var(--color-surface-soft) 100%);
+    radial-gradient(24rem 10rem at 100% 0%, color-mix(in srgb, var(--color-primary) 18%, transparent), transparent 55%),
+    radial-gradient(20rem 8rem at 0% 100%, rgba(59, 130, 246, 0.1), transparent 62%),
+    linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, transparent), color-mix(in srgb, var(--color-surface-soft) 88%, var(--color-bg)) 100%);
 }
 
 .workout-card h2 {

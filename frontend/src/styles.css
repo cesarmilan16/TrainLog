@@ -143,14 +143,13 @@ button.ghost:hover {
   box-shadow: none;
 }
 
-.logout-btn {
-  background: linear-gradient(120deg, #111827, #0b1220);
-  border: 1px solid transparent;
+html.dark .logout-btn,
+body.dark .logout-btn {
   color: #ffffff;
 }
 
-.logout-btn:hover {
-  background: linear-gradient(120deg, #0f172a, #020617);
+html.dark .logout-btn:hover,
+body.dark .logout-btn:hover {
   color: #ffffff;
 }
 

@@ -43,6 +43,11 @@ export interface Exercise {
   workout_id: number;
 }
 
+export interface MovementSuggestion {
+  id: number;
+  name: string;
+}
+
 export interface ExerciseLog {
   id: number;
   weight: number;

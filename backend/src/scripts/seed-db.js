@@ -1,4 +1,4 @@
-const { initSchema, seedExampleData, closeDb } = require('../data/db');
+const { initSchema, seedExampleData, closeDb } = require('../config/database/db');
 
 initSchema();
 seedExampleData();

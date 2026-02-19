@@ -1,5 +1,5 @@
 .manager {
-  padding-block: 1.1rem 2rem;
+  padding-block: 1rem 2rem;
 }
 
 .topbar {
@@ -10,12 +10,34 @@
   position: sticky;
   top: 0.75rem;
   z-index: 10;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  background:
+    radial-gradient(24rem 10rem at 100% 0%, rgba(132, 204, 22, 0.14), transparent 56%),
+    var(--panel);
 }
 
 .topbar h1 {
   margin-top: 0.4rem;
-  font-size: clamp(1.2rem, 2vw, 1.8rem);
+  font-size: clamp(1.35rem, 2.3vw, 2rem);
+}
+
+.top-metrics {
+  margin-top: 0.55rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.top-metrics span {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.2rem 0.58rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #3f6212;
+  background: #ecfccb;
+  border: 1px solid #d9f99d;
 }
 
 .app-error {
@@ -31,6 +53,9 @@
 .panel {
   padding: 1rem;
   transition: box-shadow 120ms ease;
+  background:
+    radial-gradient(22rem 8rem at 100% 0%, rgba(132, 204, 22, 0.1), transparent 58%),
+    linear-gradient(180deg, #fff, #f8fbfd);
 }
 
 .panel:hover {
@@ -55,9 +80,9 @@
 
 .list-item {
   text-align: left;
-  background: #f7fbff;
+  background: #ffffff;
   color: var(--text);
-  border: 1px solid #d9e5f5;
+  border: 1px solid #d8e1ea;
   display: flex;
   flex-direction: column;
   gap: 0.08rem;
@@ -66,8 +91,8 @@
 }
 
 .list-item:hover {
-  background: #eef6ff;
-  border-color: #bcd7f6;
+  background: #f7fbef;
+  border-color: #c6d7a2;
   transform: none;
   box-shadow: none;
 }
@@ -96,9 +121,9 @@
   padding: 0.1rem 0.5rem;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #0b7285;
-  background: #e6f9ff;
-  border: 1px solid #b3ecff;
+  color: #365314;
+  background: #ecfccb;
+  border: 1px solid #d9f99d;
   white-space: nowrap;
 }
 
@@ -109,8 +134,8 @@
 }
 
 .list-item.active {
-  border-color: #74c1ff;
-  background: linear-gradient(135deg, #ebf5ff, #f0fbff);
+  border-color: #84cc16;
+  background: linear-gradient(135deg, #f3fbe1, #fbffef);
   box-shadow: none;
   transform: none;
 }
@@ -136,8 +161,8 @@
 .menu-trigger:hover {
   transform: none;
   box-shadow: none;
-  border-color: #bcd7f6;
-  background: #f4f9ff;
+  border-color: #c6d7a2;
+  background: #f8fce9;
 }
 
 .menu-dropdown {
@@ -184,7 +209,7 @@
   background: #fff;
   border-radius: 12px;
   padding: 0.65rem;
-  border-left: 4px solid #6aa989;
+  border-left: 4px solid #84cc16;
 }
 
 .exercise-detail-shell {
@@ -220,6 +245,48 @@
   gap: 0.28rem;
 }
 
+.autocomplete {
+  position: relative;
+}
+
+.suggestions-menu {
+  position: absolute;
+  top: calc(100% + 0.25rem);
+  left: 0;
+  right: 0;
+  z-index: 40;
+  border: 1px solid #d5dfeb;
+  border-radius: 10px;
+  background: #fff;
+  box-shadow: 0 14px 28px rgba(15, 23, 42, 0.18);
+  max-height: 180px;
+  overflow: auto;
+  padding: 0.24rem;
+  display: grid;
+  gap: 0.2rem;
+}
+
+.suggestion-item {
+  width: 100%;
+  text-align: left;
+  border-radius: 8px;
+  min-height: 34px;
+  padding: 0.42rem 0.56rem;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #1f2937;
+  background: #fff;
+  border: 1px solid transparent;
+  box-shadow: none;
+}
+
+.suggestion-item:hover {
+  transform: none;
+  box-shadow: none;
+  background: #f4f9ea;
+  border-color: #d9f99d;
+}
+
 .field-error {
   color: #be123c;
   font-size: 0.78rem;
@@ -244,14 +311,14 @@
 }
 
 .action-btn--save {
-  background: #dcfce7;
-  color: #166534;
-  border-color: #86efac;
+  background: #ecfccb;
+  color: #3f6212;
+  border-color: #bef264;
 }
 
 .action-btn--save:hover {
-  background: #bbf7d0;
-  border-color: #4ade80;
+  background: #d9f99d;
+  border-color: #84cc16;
 }
 
 .action-btn--cancel {

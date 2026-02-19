@@ -6,7 +6,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
 
 import { AuthService } from '../../core/services/auth.service';
 import { ManagerService } from '../../core/services/manager.service';
-import { Exercise, ManagerClient, Workout } from '../../core/models';
+import { Exercise, ManagerClient, MovementSuggestion, Workout } from '../../core/models';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -55,6 +55,12 @@ export class ManagerDashboardComponent implements OnInit {
   showCreateClient = false;
   showCreateWorkout = false;
   showCreateExercise = false;
+  createExerciseMovementId: number | null = null;
+  editExerciseMovementId: number | null = null;
+  createExerciseSuggestions: MovementSuggestion[] = [];
+  editExerciseSuggestions: MovementSuggestion[] = [];
+  showCreateSuggestions = false;
+  showEditSuggestions = false;
 
   editModalOpen = false;
   editModalTitle = '';
@@ -109,6 +115,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.closeMenus();
     this.closeEditModal();
     this.closeConfirmModal();
+    this.closeSuggestionLists();
     this.cdr.markForCheck();
   }
 
@@ -158,6 +165,11 @@ export class ManagerDashboardComponent implements OnInit {
     // Evita mostrar workouts del cliente anterior mientras llega la nueva carga.
     this.workouts = [];
     this.exercises = [];
+    this.createExerciseSuggestions = [];
+    this.editExerciseSuggestions = [];
+    this.createExerciseMovementId = null;
+    this.editExerciseMovementId = null;
+    this.closeSuggestionLists();
     this.closeMenus();
     this.fetchWorkouts(clientId);
   }
@@ -461,7 +473,8 @@ export class ManagerDashboardComponent implements OnInit {
         rir: this.createExerciseForm.getRawValue().rir ?? null,
         rm_percent: this.createExerciseForm.getRawValue().rm_percent ?? null,
         order_index: Number(this.createExerciseForm.getRawValue().order_index),
-        workoutId: this.selectedWorkoutId
+        workoutId: this.selectedWorkoutId,
+        ...(this.createExerciseMovementId ? { movementId: this.createExerciseMovementId } : {})
       })
       .subscribe({
         next: () => {
@@ -473,6 +486,8 @@ export class ManagerDashboardComponent implements OnInit {
             rm_percent: null,
             order_index: null
           });
+          this.createExerciseMovementId = null;
+          this.createExerciseSuggestions = [];
           this.showCreateExercise = false;
           this.fetchExercises(this.selectedWorkoutId as number);
           this.cdr.markForCheck();
@@ -486,6 +501,7 @@ export class ManagerDashboardComponent implements OnInit {
 
   startEdit(exercise: Exercise): void {
     this.closeMenus();
+    this.showCreateSuggestions = false;
     this.editingExerciseId = exercise.id;
     this.editExerciseForm.reset({
       name: exercise.name,
@@ -495,10 +511,13 @@ export class ManagerDashboardComponent implements OnInit {
       rm_percent: exercise.rm_percent,
       order_index: exercise.order_index
     });
+    this.editExerciseMovementId = null;
+    this.fetchMovementSuggestions(exercise.name, 'edit');
   }
 
   cancelEdit(): void {
     this.editingExerciseId = null;
+    this.showEditSuggestions = false;
     this.closeMenus();
   }
 
@@ -515,11 +534,15 @@ export class ManagerDashboardComponent implements OnInit {
         reps: Number(this.editExerciseForm.getRawValue().reps),
         rir: this.editExerciseForm.getRawValue().rir ?? null,
         rm_percent: this.editExerciseForm.getRawValue().rm_percent ?? null,
-        order_index: Number(this.editExerciseForm.getRawValue().order_index)
+        order_index: Number(this.editExerciseForm.getRawValue().order_index),
+        ...(this.editExerciseMovementId ? { movementId: this.editExerciseMovementId } : {})
       })
       .subscribe({
         next: () => {
           this.editingExerciseId = null;
+          this.editExerciseMovementId = null;
+          this.editExerciseSuggestions = [];
+          this.showEditSuggestions = false;
           this.fetchExercises(this.selectedWorkoutId as number);
           this.cdr.markForCheck();
         },
@@ -553,6 +576,10 @@ export class ManagerDashboardComponent implements OnInit {
     this.router.navigateByUrl('/login');
   }
 
+  get totalWorkouts(): number {
+    return this.clients.reduce((total, client) => total + client.workouts_count, 0);
+  }
+
   toggleCreateSection(section: 'client' | 'workout' | 'exercise'): void {
     if (section === 'client') {
       this.showCreateClient = !this.showCreateClient;
@@ -567,7 +594,99 @@ export class ManagerDashboardComponent implements OnInit {
     this.showCreateExercise = !this.showCreateExercise;
     if (this.showCreateExercise) {
       this.setNextExerciseOrder();
+      this.createExerciseSuggestions = [];
+      this.createExerciseMovementId = null;
+      this.showCreateSuggestions = false;
     }
+  }
+
+  onCreateExerciseNameInput(): void {
+    const name = (this.createExerciseForm.getRawValue().name ?? '').trim();
+    this.fetchMovementSuggestions(name, 'create');
+  }
+
+  onEditExerciseNameInput(): void {
+    const name = (this.editExerciseForm.getRawValue().name ?? '').trim();
+    this.fetchMovementSuggestions(name, 'edit');
+  }
+
+  selectSuggestion(item: MovementSuggestion, target: 'create' | 'edit'): void {
+    if (target === 'create') {
+      this.createExerciseForm.patchValue({ name: item.name });
+      this.createExerciseMovementId = item.id;
+      this.showCreateSuggestions = false;
+      return;
+    }
+
+    this.editExerciseForm.patchValue({ name: item.name });
+    this.editExerciseMovementId = item.id;
+    this.showEditSuggestions = false;
+  }
+
+  closeSuggestionLists(): void {
+    this.showCreateSuggestions = false;
+    this.showEditSuggestions = false;
+  }
+
+  private fetchMovementSuggestions(name: string, target: 'create' | 'edit'): void {
+    if (!this.selectedClientId) {
+      return;
+    }
+
+    const query = name.trim();
+    if (query.length === 0) {
+      if (target === 'create') {
+        this.createExerciseSuggestions = [];
+        this.createExerciseMovementId = null;
+        this.showCreateSuggestions = false;
+      } else {
+        this.editExerciseSuggestions = [];
+        this.editExerciseMovementId = null;
+        this.showEditSuggestions = false;
+      }
+      this.cdr.markForCheck();
+      return;
+    }
+
+    this.managerService.getMovementSuggestions(this.selectedClientId, query).subscribe({
+      next: (suggestions) => {
+        const normalizedInput = this.normalizeName(query);
+        const exact = suggestions.find((item) => this.normalizeName(item.name) === normalizedInput) ?? null;
+
+        if (target === 'create') {
+          this.createExerciseSuggestions = suggestions;
+          this.createExerciseMovementId = exact?.id ?? null;
+          this.showCreateSuggestions = suggestions.length > 0;
+        } else {
+          this.editExerciseSuggestions = suggestions;
+          this.editExerciseMovementId = exact?.id ?? null;
+          this.showEditSuggestions = suggestions.length > 0;
+        }
+
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        if (target === 'create') {
+          this.createExerciseSuggestions = [];
+          this.createExerciseMovementId = null;
+          this.showCreateSuggestions = false;
+        } else {
+          this.editExerciseSuggestions = [];
+          this.editExerciseMovementId = null;
+          this.showEditSuggestions = false;
+        }
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  private normalizeName(value: string): string {
+    return value
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ');
   }
 
   private setNextExerciseOrder(): void {

@@ -1,5 +1,5 @@
-const { db } = require('./db');
-const { parsePositiveInt, isSqliteUniqueError } = require('../utils/data.helpers');
+const { db } = require('../config/database/db');
+const { parsePositiveInt, isSqliteUniqueError } = require('../shared/utils/data.helpers');
 
 function newWorkout(data, managerId) {
   const { name, userId } = data;
@@ -58,7 +58,7 @@ function newWorkout(data, managerId) {
 
 function getMyWorkouts(userId) {
   return db
-    .prepare('SELECT id, name FROM workouts WHERE user_id = ? ORDER BY id DESC')
+    .prepare('SELECT id, name FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC')
     .all(userId);
 }
 
@@ -82,7 +82,8 @@ function getWorkoutsManager(userId, managerId) {
       FROM workouts
       JOIN users ON workouts.user_id = users.id
       LEFT JOIN workout_exercises ON workout_exercises.workout_id = workouts.id
-      WHERE workouts.user_id = ? AND workouts.manager_id = ?
+      WHERE workouts.user_id = ? AND workouts.manager_id = ? AND workouts.archived_at IS NULL
+        AND (workout_exercises.archived_at IS NULL OR workout_exercises.id IS NULL)
       GROUP BY workouts.id, workouts.name, users.email
       ORDER BY workouts.id DESC
     `)
@@ -99,17 +100,19 @@ function getWorkoutsManager(userId, managerId) {
 }
 
 function getUserDashboard(userId) {
-  const workoutsStmt = db.prepare('SELECT id, name FROM workouts WHERE user_id = ? ORDER BY id DESC');
+  const workoutsStmt = db.prepare(
+    'SELECT id, name FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC'
+  );
   const exercisesStmt = db.prepare(`
-    SELECT id, name, sets, reps, rir, rm_percent, order_index
+    SELECT id, name, sets, reps, rir, rm_percent, order_index, movement_id
     FROM workout_exercises
-    WHERE workout_id = ?
+    WHERE workout_id = ? AND archived_at IS NULL
     ORDER BY order_index
   `);
   const lastLogStmt = db.prepare(`
     SELECT weight, reps, date
     FROM exercise_logs
-    WHERE exercise_id = ? AND user_id = ?
+    WHERE movement_id = ? AND user_id = ?
     ORDER BY date DESC
     LIMIT 1
   `);
@@ -122,7 +125,7 @@ function getUserDashboard(userId) {
       name: workout.name,
       exercises: exercisesStmt.all(workout.id).map((exercise) => ({
         ...exercise,
-        last_log: lastLogStmt.get(exercise.id, userId) || null
+        last_log: lastLogStmt.get(exercise.movement_id, userId) || null
       }))
     }));
   } catch (error) {
@@ -169,7 +172,7 @@ function deleteWorkout(workoutId, managerId) {
   }
 
   const ownership = db
-    .prepare('SELECT id FROM workouts WHERE id = ? AND manager_id = ?')
+    .prepare('SELECT id, name FROM workouts WHERE id = ? AND manager_id = ? AND archived_at IS NULL')
     .get(id, managerId);
 
   if (!ownership) {
@@ -180,7 +183,21 @@ function deleteWorkout(workoutId, managerId) {
   }
 
   try {
-    const result = db.prepare('DELETE FROM workouts WHERE id = ?').run(id);
+    const result = db.transaction(() => {
+      db.prepare(`
+        UPDATE workout_exercises
+        SET archived_at = CURRENT_TIMESTAMP,
+            order_index = -id
+        WHERE workout_id = ? AND archived_at IS NULL
+      `).run(id);
+
+      return db.prepare(`
+        UPDATE workouts
+        SET archived_at = CURRENT_TIMESTAMP,
+            name = name || ' [archived #' || id || ']'
+        WHERE id = ? AND archived_at IS NULL
+      `).run(id);
+    })();
 
     return {
       message: 'Entrenamiento eliminado',
@@ -214,7 +231,7 @@ function updateWorkout(workoutId, payload, managerId) {
   }
 
   const ownership = db
-    .prepare('SELECT id, user_id FROM workouts WHERE id = ? AND manager_id = ?')
+    .prepare('SELECT id, user_id FROM workouts WHERE id = ? AND manager_id = ? AND archived_at IS NULL')
     .get(id, managerId);
 
   if (!ownership) {
@@ -227,7 +244,9 @@ function updateWorkout(workoutId, payload, managerId) {
   try {
     db.prepare('UPDATE workouts SET name = ? WHERE id = ?').run(name, id);
 
-    const workout = db.prepare('SELECT id, name, user_id, manager_id FROM workouts WHERE id = ?').get(id);
+    const workout = db
+      .prepare('SELECT id, name, user_id, manager_id FROM workouts WHERE id = ? AND archived_at IS NULL')
+      .get(id);
 
     return {
       message: 'Entrenamiento actualizado',

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-import { Exercise, ManagerClient, Workout } from '../models';
+import { Exercise, ManagerClient, MovementSuggestion, Workout } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ManagerService {
@@ -58,18 +58,28 @@ export class ManagerService {
     rm_percent?: number | null;
     order_index: number;
     workoutId: number;
+    movementId?: number;
   }) {
     return this.http.post('/exercises', payload);
   }
 
   updateExercise(
     exerciseId: number,
-    payload: Partial<Pick<Exercise, 'name' | 'sets' | 'reps' | 'rir' | 'rm_percent' | 'order_index'>>
+    payload: Partial<Pick<Exercise, 'name' | 'sets' | 'reps' | 'rir' | 'rm_percent' | 'order_index'>> & {
+      movementId?: number;
+    }
   ) {
     return this.http.put(`/exercises/${exerciseId}`, payload);
   }
 
   deleteExercise(exerciseId: number) {
     return this.http.delete(`/exercises/${exerciseId}`);
+  }
+
+  getMovementSuggestions(userId: number, query: string): Observable<MovementSuggestion[]> {
+    const q = encodeURIComponent(query ?? '');
+    return this.http.get<{ data: MovementSuggestion[] }>(`/exercises/movements/${userId}?q=${q}`).pipe(
+      map((response) => response.data ?? [])
+    );
   }
 }

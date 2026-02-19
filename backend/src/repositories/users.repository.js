@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
-const { db } = require('./db');
-const { parsePositiveInt, isSqliteUniqueError } = require('../utils/data.helpers');
+const { db } = require('../config/database/db');
+const { parsePositiveInt, isSqliteUniqueError } = require('../shared/utils/data.helpers');
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -101,7 +101,9 @@ function getManagerClients(managerId) {
       .all(managerId);
 
     // Evita N+1 de consultas preparándolas una sola vez.
-    const workoutsCountStmt = db.prepare('SELECT COUNT(*) AS total FROM workouts WHERE user_id = ?');
+    const workoutsCountStmt = db.prepare(
+      'SELECT COUNT(*) AS total FROM workouts WHERE user_id = ? AND archived_at IS NULL'
+    );
     const lastActivityStmt = db.prepare('SELECT MAX(date) AS last_activity FROM exercise_logs WHERE user_id = ?');
 
     return users.map((user) => {
@@ -252,6 +254,7 @@ function deleteClient(userId, managerId) {
     // Se ejecuta en transacción para evitar estado intermedio inconsistente.
     const tx = db.transaction(() => {
       db.prepare('DELETE FROM exercise_logs WHERE user_id = ?').run(id);
+      db.prepare('DELETE FROM movements WHERE user_id = ?').run(id);
       db.prepare('DELETE FROM workouts WHERE user_id = ?').run(id);
       db.prepare('DELETE FROM users WHERE id = ?').run(id);
     });

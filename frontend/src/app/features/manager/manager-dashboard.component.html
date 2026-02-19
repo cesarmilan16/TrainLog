@@ -1,9 +1,14 @@
-<section class="container manager" (click)="closeMenus()">
+<section class="container manager" (click)="closeMenus(); closeSuggestionLists()">
   <header class="card topbar">
     <div>
-      <span class="badge">Manager</span>
-      <h1>Panel de gestión</h1>
-      <p class="muted">Clientes, workouts y ejercicios en un flujo único.</p>
+      <span class="badge">Coach Mode</span>
+      <h1>Centro de entrenamiento</h1>
+      <p class="muted">Diseña bloques, organiza sesiones y ajusta el plan de cada atleta.</p>
+      <div class="top-metrics">
+        <span>{{ clients.length }} atletas</span>
+        <span>{{ totalWorkouts }} bloques</span>
+        <span>{{ exercises.length }} ejercicios visibles</span>
+      </div>
     </div>
     <button class="ghost" (click)="logout()">Cerrar sesión</button>
   </header>
@@ -271,7 +276,28 @@
                     <form [formGroup]="editExerciseForm" class="form-row compact">
                       <div class="field">
                         <label [for]="'edit-exercise-name-' + exercise.id">Nombre</label>
-                        <input [id]="'edit-exercise-name-' + exercise.id" type="text" formControlName="name" placeholder="Ej. Press banca" />
+                        <div class="autocomplete">
+                          <input
+                            [id]="'edit-exercise-name-' + exercise.id"
+                            type="text"
+                            formControlName="name"
+                            placeholder="Ej. Press banca"
+                            (input)="onEditExerciseNameInput()"
+                          />
+                          @if (showEditSuggestions) {
+                            <div class="suggestions-menu" (click)="$event.stopPropagation()">
+                              @for (item of editExerciseSuggestions; track item.id) {
+                                <button
+                                  type="button"
+                                  class="suggestion-item"
+                                  (click)="selectSuggestion(item, 'edit')"
+                                >
+                                  {{ item.name }}
+                                </button>
+                              }
+                            </div>
+                          }
+                        </div>
                         @if (editExerciseForm.controls.name.touched && editExerciseForm.controls.name.invalid) {
                           <small class="field-error">El nombre es obligatorio</small>
                         }
@@ -340,7 +366,28 @@
           <form [formGroup]="createExerciseForm" (ngSubmit)="createExercise()" class="form-row create-form">
             <div class="field">
               <label for="new-exercise-name">Nombre</label>
-              <input id="new-exercise-name" type="text" placeholder="Ej. Press banca" formControlName="name" />
+              <div class="autocomplete">
+                <input
+                  id="new-exercise-name"
+                  type="text"
+                  placeholder="Ej. Press banca"
+                  formControlName="name"
+                  (input)="onCreateExerciseNameInput()"
+                />
+                @if (showCreateSuggestions) {
+                  <div class="suggestions-menu" (click)="$event.stopPropagation()">
+                    @for (item of createExerciseSuggestions; track item.id) {
+                      <button
+                        type="button"
+                        class="suggestion-item"
+                        (click)="selectSuggestion(item, 'create')"
+                      >
+                        {{ item.name }}
+                      </button>
+                    }
+                  </div>
+                }
+              </div>
               @if (createExerciseForm.controls.name.touched && createExerciseForm.controls.name.invalid) {
                 <small class="field-error">El nombre es obligatorio</small>
               }

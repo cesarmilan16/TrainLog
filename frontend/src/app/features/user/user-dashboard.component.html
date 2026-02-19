@@ -2,8 +2,13 @@
   <header class="card topbar">
     <div>
       <span class="badge">Usuario</span>
-      <h1>Mi progreso</h1>
-      <p class="muted">Revisa tu plan y registra avances en segundos.</p>
+      <h1>Mi sesión</h1>
+      <p class="muted">Entrenamientos listos para hoy. Registra cada serie y mide progreso real.</p>
+      <div class="top-metrics">
+        <span>{{ dashboard.length }} rutinas</span>
+        <span>{{ totalExercises }} ejercicios</span>
+        <span>{{ exercisesWithLogs }} con historial</span>
+      </div>
     </div>
     <button class="ghost" (click)="logout()">Cerrar sesión</button>
   </header>
@@ -68,7 +73,10 @@
                   }
                 </div>
 
-                <button class="secondary" (click)="openLog(exercise.id)">Registrar log</button>
+                <div class="exercise-actions">
+                  <button class="ghost" (click)="openProgress(exercise.id, exercise.name)">Ver progreso</button>
+                  <button class="secondary" (click)="openLog(exercise.id)">Registrar log</button>
+                </div>
 
                 @if (openedExerciseId === exercise.id) {
                   <form class="form-row inline" [formGroup]="logForm">
@@ -92,3 +100,139 @@
     </section>
   }
 </section>
+
+@if (progressExerciseId !== null) {
+  <div class="sheet-backdrop" (click)="closeProgress()">
+    <section class="progress-sheet card" (click)="$event.stopPropagation()">
+      <header class="sheet-head">
+        <div>
+          <p class="sheet-kicker">Progresión</p>
+          <h3>{{ progressExerciseName }}</h3>
+        </div>
+        <button class="ghost close-btn" type="button" (click)="closeProgress()">Cerrar</button>
+      </header>
+
+      <div class="range-switch">
+        <button type="button" class="ghost" [class.active]="progressRange === 7" (click)="setProgressRange(7)">7d</button>
+        <button type="button" class="ghost" [class.active]="progressRange === 30" (click)="setProgressRange(30)">30d</button>
+        <button type="button" class="ghost" [class.active]="progressRange === 90" (click)="setProgressRange(90)">90d</button>
+        <button type="button" class="ghost" [class.active]="progressRange === 0" (click)="setProgressRange(0)">Todo</button>
+      </div>
+
+      <div class="metric-switch">
+        <button type="button" class="ghost" [class.active]="progressMetric === 'weight'" (click)="setProgressMetric('weight')">Peso</button>
+        <button type="button" class="ghost" [class.active]="progressMetric === 'erm'" (click)="setProgressMetric('erm')">1RM</button>
+        <button type="button" class="ghost" [class.active]="progressMetric === 'volume'" (click)="setProgressMetric('volume')">Volumen</button>
+      </div>
+
+      @if (progressError) {
+        <p class="error">{{ progressError }}</p>
+      }
+
+      @if (progressLoading) {
+        <p class="muted">Cargando progreso...</p>
+      } @else if (filteredProgressLogs.length === 0) {
+        <p class="muted empty-state">Aún no hay logs en este rango.</p>
+      } @else {
+        <section class="kpis">
+          <article class="kpi">
+            <small>Último log</small>
+            <strong>
+              {{ latestLog?.weight }}kg x {{ latestLog?.reps }}
+            </strong>
+          </article>
+          <article class="kpi">
+            <small>Mejor {{ getMetricLabel() }}</small>
+            <strong>
+              @if (bestMetricValue !== null) {
+                {{ bestMetricValue | number:'1.0-1' }}
+                @if (progressMetric === 'weight' || progressMetric === 'erm') { kg }
+              } @else {
+                --
+              }
+            </strong>
+          </article>
+          <article class="kpi">
+            <small>Volumen total</small>
+            <strong>{{ volumeTotal }} kg·rep</strong>
+          </article>
+          <article class="kpi">
+            <small>Tendencia</small>
+            <strong [class.trend-up]="(trendPercent ?? 0) > 0" [class.trend-down]="(trendPercent ?? 0) < 0">
+              @if (trendPercent !== null) {
+                {{ trendPercent > 0 ? '+' : '' }}{{ trendPercent | number:'1.0-1' }}%
+              } @else {
+                --
+              }
+            </strong>
+          </article>
+        </section>
+
+        <div class="chart-card">
+          <svg [attr.viewBox]="chartViewBox" role="img" [attr.aria-label]="'Tendencia de ' + getMetricLabel()">
+            <g class="chart-grid">
+              @for (grid of chartGridLines; track grid.y) {
+                <line
+                  [attr.x1]="chartPadding"
+                  [attr.x2]="chartWidth - chartPadding"
+                  [attr.y1]="grid.y"
+                  [attr.y2]="grid.y"
+                ></line>
+                <text [attr.x]="chartPadding + 2" [attr.y]="grid.y - 4">{{ grid.label | number:'1.0-1' }}</text>
+              }
+            </g>
+            @if (chartAreaPath) {
+              <path class="chart-area" [attr.d]="chartAreaPath"></path>
+            }
+            <path class="chart-line" [attr.d]="chartPath"></path>
+            @if (movingAveragePath) {
+              <path class="chart-line-average" [attr.d]="movingAveragePath"></path>
+            }
+            @for (point of chartPoints; track point.log.id) {
+              <circle
+                class="chart-dot"
+                [attr.cx]="point.x"
+                [attr.cy]="point.y"
+                r="3.8"
+              >
+                <title>
+                  {{ point.log.date | date:'shortDate' }} · {{ point.log.weight }}kg x {{ point.log.reps }} · {{ getMetricLabel() }} {{ getMetricValue(point.log) | number:'1.0-1' }}
+                </title>
+              </circle>
+            }
+          </svg>
+          <small class="muted">
+            @if (progressMetric === 'erm') {
+              Línea basada en 1RM estimado (Epley).
+            } @else if (progressMetric === 'weight') {
+              Línea basada en el peso registrado por sesión.
+            } @else {
+              Línea basada en volumen por sesión (kg x reps).
+            }
+            Media móvil (3 sesiones) en línea punteada.
+          </small>
+        </div>
+
+        <section class="log-list">
+          @for (log of filteredProgressLogs; track log.id) {
+            <article class="log-row">
+              <div>
+                <strong>{{ log.weight }}kg x {{ log.reps }}</strong>
+                <small class="muted">{{ log.date | date:'medium' }}</small>
+              </div>
+              <div class="log-meta">
+                <span>
+                  {{ getMetricLabel() }} {{ getMetricValue(log) | number:'1.0-1' }}
+                  @if (progressMetric === 'weight' || progressMetric === 'erm') { kg }
+                </span>
+                @if (getMetricValue(log) === bestMetricValue) {
+                  <span class="pr-badge">PR</span>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      }
+    </section>
+  </div>
+}

@@ -1,5 +1,29 @@
-const { db } = require('./db');
-const { parsePositiveInt } = require('../utils/data.helpers');
+const { db } = require('../config/database/db');
+const { parsePositiveInt } = require('../shared/utils/data.helpers');
+
+function normalizeMovementName(name) {
+  return String(name ?? '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/\p{Diacritic}/gu, '')
+    .replace(/\s+/g, ' ');
+}
+
+function resolveMovementId(userId, movementName) {
+  const normalized = normalizeMovementName(movementName);
+  const existing = db
+    .prepare('SELECT id FROM movements WHERE user_id = ? AND name_normalized = ?')
+    .get(userId, normalized);
+
+  if (existing) {
+    return existing.id;
+  }
+
+  return db
+    .prepare('INSERT INTO movements (name, name_normalized, user_id) VALUES (?, ?, ?)')
+    .run(movementName.trim(), normalized, userId).lastInsertRowid;
+}
 
 function addLog(data, userId) {
   const exerciseId = parsePositiveInt(data?.exerciseId);
@@ -15,7 +39,7 @@ function addLog(data, userId) {
 
   const ownership = db
     .prepare(`
-      SELECT we.id
+      SELECT we.id, we.name, we.movement_id
       FROM workout_exercises we
       JOIN workouts w ON we.workout_id = w.id
       WHERE we.id = ? AND w.user_id = ?
@@ -30,9 +54,18 @@ function addLog(data, userId) {
   }
 
   try {
+    const movementId = ownership.movement_id || resolveMovementId(userId, ownership.name);
+
+    if (!ownership.movement_id) {
+      db.prepare('UPDATE workout_exercises SET movement_id = ? WHERE id = ?').run(movementId, exerciseId);
+    }
+
     const result = db
-      .prepare('INSERT INTO exercise_logs (weight, reps, user_id, exercise_id) VALUES (?, ?, ?, ?)')
-      .run(weight, reps, userId, exerciseId);
+      .prepare(`
+        INSERT INTO exercise_logs (weight, reps, user_id, exercise_id, movement_id)
+        VALUES (?, ?, ?, ?, ?)
+      `)
+      .run(weight, reps, userId, exerciseId, movementId);
 
     return {
       message: 'Log creado',
@@ -59,7 +92,7 @@ function getLog(exerciseId, userId) {
 
   const ownership = db
     .prepare(`
-      SELECT we.id
+      SELECT we.id, we.name, we.movement_id
       FROM workout_exercises we
       JOIN workouts w ON we.workout_id = w.id
       WHERE we.id = ? AND w.user_id = ?
@@ -74,9 +107,16 @@ function getLog(exerciseId, userId) {
   }
 
   try {
+    const movementId = ownership.movement_id || resolveMovementId(userId, ownership.name);
+
     const logs = db
-      .prepare('SELECT id, weight, reps, date FROM exercise_logs WHERE exercise_id = ? AND user_id = ? ORDER BY date DESC')
-      .all(id, userId);
+      .prepare(`
+        SELECT id, weight, reps, date
+        FROM exercise_logs
+        WHERE movement_id = ? AND user_id = ?
+        ORDER BY date DESC
+      `)
+      .all(movementId, userId);
 
     return { data: logs };
   } catch (error) {
@@ -100,7 +140,7 @@ function getLastLog(exerciseId, userId) {
 
   const ownership = db
     .prepare(`
-      SELECT we.id
+      SELECT we.id, we.name, we.movement_id
       FROM workout_exercises we
       JOIN workouts w ON we.workout_id = w.id
       WHERE we.id = ? AND w.user_id = ?
@@ -115,9 +155,17 @@ function getLastLog(exerciseId, userId) {
   }
 
   try {
+    const movementId = ownership.movement_id || resolveMovementId(userId, ownership.name);
+
     const lastLog = db
-      .prepare('SELECT id, weight, reps, date FROM exercise_logs WHERE exercise_id = ? AND user_id = ? ORDER BY date DESC LIMIT 1')
-      .get(id, userId);
+      .prepare(`
+        SELECT id, weight, reps, date
+        FROM exercise_logs
+        WHERE movement_id = ? AND user_id = ?
+        ORDER BY date DESC
+        LIMIT 1
+      `)
+      .get(movementId, userId);
 
     return { data: lastLog || null };
   } catch (error) {

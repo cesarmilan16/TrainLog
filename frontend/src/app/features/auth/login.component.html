@@ -1,18 +1,25 @@
 <section class="login-wrap">
   <div class="login-grid">
     <aside class="card login-info">
-      <span class="badge">TrainLog</span>
-      <h1>Entrena con estructura y seguimiento real</h1>
-      <p class="muted">Gestiona clientes, planes y evolución desde una sola plataforma.</p>
+      <span class="badge">TrainLog Pro</span>
+      <h1>Entrena. Registra. Progresa.</h1>
+      <p class="muted">Experiencia de entrenamiento real, con enfoque en rendimiento y consistencia.</p>
+
+      <div class="feature-strip">
+        <span>Rutinas por bloques</span>
+        <span>Historial de cargas</span>
+        <span>Seguimiento de progreso</span>
+      </div>
 
       <div class="demo-box">
+        <p class="demo-title">Accesos demo</p>
         <p><strong>Manager:</strong> demo@trainlog.com / 1234</p>
         <p><strong>Cliente:</strong> cliente@trainlog.com / 1234</p>
       </div>
     </aside>
 
     <div class="card login-card">
-      <p class="eyebrow">Acceso</p>
+      <p class="eyebrow">Workout App Access</p>
       <h2>Iniciar sesión</h2>
 
       <div class="demo-inline muted">
@@ -32,7 +39,7 @@
         </div>
 
         <button type="submit" [disabled]="loading">
-          {{ loading ? 'Entrando...' : 'Entrar al panel' }}
+          {{ loading ? 'Entrando...' : 'Empezar entrenamiento' }}
         </button>
 
         @if (errorMessage) {

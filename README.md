@@ -13,6 +13,7 @@ TrainLog es una aplicación para gestionar entrenamientos entre manager y client
 ```bash
 cd backend
 npm install
+cp .env.example .env # configura JWT_SECRET
 npm run reset:db   # borra y recrea la base con datos de ejemplo
 npm run dev
 ```
@@ -52,3 +53,45 @@ docker compose down
 ## Notas
 - El backend usa SQLite (`backend/trainlog.db`).
 - Si necesitas regenerar datos demo en local: `cd backend && npm run reset:db`.
+- El seed automático al iniciar está desactivado por defecto. Actívalo con `SEED_ON_BOOT=true` en `backend/.env`.
+
+## Estructura del backend (actual)
+```text
+backend/src
+├── app.js
+├── server.js
+├── config
+│   └── database
+│       ├── db.js
+│       └── db-path.js
+├── middleware
+│   ├── auth.js
+│   └── authorize.js
+├── controllers
+│   ├── users.controller.js
+│   ├── workouts.controller.js
+│   ├── exercises.controller.js
+│   └── exerciseLogs.controller.js
+├── services
+│   ├── users.service.js
+│   ├── workouts.service.js
+│   ├── exercises.service.js
+│   └── exerciseLogs.service.js
+├── repositories
+│   ├── users.repository.js
+│   ├── workouts.repository.js
+│   ├── exercises.repository.js
+│   └── exerciseLogs.repository.js
+├── routes
+│   ├── users.routes.js
+│   ├── workouts.routes.js
+│   ├── exercises.routes.js
+│   └── exerciseLogs.routes.js
+├── shared
+│   └── utils
+│       ├── respond.js
+│       └── data.helpers.js
+└── scripts
+    ├── seed-db.js
+    └── reset-db.js
+```

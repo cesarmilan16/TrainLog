@@ -31,11 +31,23 @@
         <div>
           <label for="email">Email</label>
           <input id="email" type="email" formControlName="email" placeholder="demo@trainlog.com" />
+
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <p class="field-error">El email es obligatorio.</p>
+          }
+
+          @if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <p class="field-error">Ingresa un email válido.</p>
+          }
         </div>
 
         <div>
           <label for="password">Password</label>
           <input id="password" type="password" formControlName="password" placeholder="******" />
+
+          @if (form.controls.password.touched && form.controls.password.hasError('required')) {
+            <p class="field-error">La contraseña es obligatoria.</p>
+          }
         </div>
 
         <button type="submit" [disabled]="loading">

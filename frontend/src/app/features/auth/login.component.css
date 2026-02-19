@@ -111,6 +111,13 @@
   display: block;
 }
 
+.field-error {
+  margin: 0.38rem 0 0;
+  color: #be123c;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
 .login-card {
   width: 100%;
   max-width: 430px;
@@ -171,6 +178,10 @@ h2 {
   .login-card {
     padding: 1rem;
     order: 1;
+  }
+
+  .field-error {
+    font-size: 0.78rem;
   }
 
   .login-card h2 {

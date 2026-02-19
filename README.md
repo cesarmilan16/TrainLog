@@ -47,7 +47,6 @@ docker compose down
 
 ## Credenciales demo (seed)
 - Manager demo: `demo@trainlog.com` / `1234`
-- Manager cesar: `cesar@trainlog.com` / `1234`
 - Cliente demo: `cliente@trainlog.com` / `1234`
 
 ## Notas

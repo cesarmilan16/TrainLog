@@ -32,6 +32,8 @@ export class LoginComponent {
 
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.errorMessage = 'Revisa email y contraseña para continuar';
+      this.cdr.markForCheck();
       return;
     }
 

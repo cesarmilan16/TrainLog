@@ -16,6 +16,14 @@
     linear-gradient(180deg, transparent, rgba(148, 163, 184, 0.18));
 }
 
+html.dark .manager::before,
+body.dark .manager::before {
+  background:
+    radial-gradient(42rem 20rem at -8% -2%, rgba(74, 222, 128, 0.12), transparent 62%),
+    radial-gradient(40rem 20rem at 108% 12%, rgba(56, 189, 248, 0.1), transparent 58%),
+    linear-gradient(180deg, transparent, rgba(15, 23, 42, 0.42));
+}
+
 .topbar {
   display: flex;
   justify-content: space-between;

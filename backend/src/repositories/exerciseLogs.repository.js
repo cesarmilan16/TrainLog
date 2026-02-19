@@ -27,7 +27,16 @@ function setExerciseMovementId(exerciseId, movementId) {
   return db.prepare('UPDATE workout_exercises SET movement_id = ? WHERE id = ?').run(movementId, exerciseId);
 }
 
-function insertLog({ weight, reps, userId, exerciseId, movementId }) {
+function insertLog({ weight, reps, userId, exerciseId, movementId, date }) {
+  if (date) {
+    return db
+      .prepare(`
+        INSERT INTO exercise_logs (weight, reps, date, user_id, exercise_id, movement_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `)
+      .run(weight, reps, date, userId, exerciseId, movementId);
+  }
+
   return db
     .prepare(`
       INSERT INTO exercise_logs (weight, reps, user_id, exercise_id, movement_id)
@@ -42,7 +51,7 @@ function listLogsByMovementAndUser(movementId, userId) {
       SELECT id, weight, reps, date
       FROM exercise_logs
       WHERE movement_id = ? AND user_id = ?
-      ORDER BY date DESC
+      ORDER BY date DESC, id DESC
     `)
     .all(movementId, userId);
 }
@@ -53,10 +62,26 @@ function getLastLogByMovementAndUser(movementId, userId) {
       SELECT id, weight, reps, date
       FROM exercise_logs
       WHERE movement_id = ? AND user_id = ?
-      ORDER BY date DESC
+      ORDER BY date DESC, id DESC
       LIMIT 1
     `)
     .get(movementId, userId);
+}
+
+function getLogOwnedByUser(logId, userId) {
+  return db
+    .prepare('SELECT id, weight, reps, date FROM exercise_logs WHERE id = ? AND user_id = ?')
+    .get(logId, userId);
+}
+
+function updateLog({ logId, weight, reps, date }) {
+  return db
+    .prepare('UPDATE exercise_logs SET weight = ?, reps = ?, date = ? WHERE id = ?')
+    .run(weight, reps, date, logId);
+}
+
+function deleteLog(logId) {
+  return db.prepare('DELETE FROM exercise_logs WHERE id = ?').run(logId);
 }
 
 module.exports = {
@@ -66,5 +91,8 @@ module.exports = {
   setExerciseMovementId,
   insertLog,
   listLogsByMovementAndUser,
-  getLastLogByMovementAndUser
+  getLastLogByMovementAndUser,
+  getLogOwnedByUser,
+  updateLog,
+  deleteLog
 };

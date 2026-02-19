@@ -14,8 +14,16 @@ export class UserService {
     );
   }
 
-  addLog(payload: { exerciseId: number; weight: number; reps: number }) {
+  addLog(payload: { exerciseId: number; weight: number; reps: number; date?: string }) {
     return this.http.post('/logs', payload);
+  }
+
+  updateLog(logId: number, payload: { weight: number; reps: number; date: string }) {
+    return this.http.put(`/logs/item/${logId}`, payload);
+  }
+
+  deleteLog(logId: number) {
+    return this.http.delete(`/logs/item/${logId}`);
   }
 
   getLogs(exerciseId: number): Observable<ExerciseLog[]> {

@@ -34,6 +34,7 @@ export class UserDashboardComponent implements OnInit {
   progressExerciseId: number | null = null;
   progressExerciseName = '';
   progressLogs: ExerciseLog[] = [];
+  editingProgressLogId: number | null = null;
   progressLoading = false;
   progressError = '';
   progressRange: 7 | 30 | 90 | 0 = 30;
@@ -45,7 +46,14 @@ export class UserDashboardComponent implements OnInit {
 
   readonly logForm = this.fb.group({
     weight: [null as number | null, [Validators.required, Validators.min(1)]],
-    reps: [null as number | null, [Validators.required, Validators.min(1)]]
+    reps: [null as number | null, [Validators.required, Validators.min(1)]],
+    date: ['']
+  });
+
+  readonly editLogForm = this.fb.group({
+    weight: [null as number | null, [Validators.required, Validators.min(1)]],
+    reps: [null as number | null, [Validators.required, Validators.min(1)]],
+    date: ['', Validators.required]
   });
 
   ngOnInit(): void {
@@ -90,7 +98,7 @@ export class UserDashboardComponent implements OnInit {
 
   openLog(exerciseId: number): void {
     this.openedExerciseId = exerciseId;
-    this.logForm.reset({ weight: null, reps: null });
+    this.logForm.reset({ weight: null, reps: null, date: this.getTodayDateInput() });
   }
 
   openProgress(exerciseId: number, exerciseName: string): void {
@@ -119,6 +127,7 @@ export class UserDashboardComponent implements OnInit {
     this.progressExerciseId = null;
     this.progressExerciseName = '';
     this.progressLogs = [];
+    this.editingProgressLogId = null;
     this.progressLoading = false;
     this.progressError = '';
     this.progressRange = 30;
@@ -179,9 +188,15 @@ export class UserDashboardComponent implements OnInit {
     }
 
     const { weight, reps } = this.logForm.getRawValue();
+    const date = (this.logForm.getRawValue().date ?? '').trim();
 
     // Tras guardar, recargamos dashboard para mostrar el último log actualizado.
-    this.userService.addLog({ exerciseId, weight: Number(weight), reps: Number(reps) }).subscribe({
+    this.userService.addLog({
+      exerciseId,
+      weight: Number(weight),
+      reps: Number(reps),
+      ...(date ? { date } : {})
+    }).subscribe({
       next: () => {
         this.openedExerciseId = null;
         this.fetchDashboard();
@@ -192,6 +207,66 @@ export class UserDashboardComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.errorMessage = error.error?.message ?? 'No se pudo guardar el log';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  startEditProgressLog(log: ExerciseLog): void {
+    this.editingProgressLogId = log.id;
+    this.editLogForm.reset({
+      weight: log.weight,
+      reps: log.reps,
+      date: this.toDateInput(log.date)
+    });
+    this.cdr.markForCheck();
+  }
+
+  cancelEditProgressLog(): void {
+    this.editingProgressLogId = null;
+  }
+
+  saveEditedProgressLog(logId: number): void {
+    if (this.editLogForm.invalid || this.progressExerciseId === null) {
+      this.editLogForm.markAllAsTouched();
+      return;
+    }
+
+    const raw = this.editLogForm.getRawValue();
+    this.userService.updateLog(logId, {
+      weight: Number(raw.weight),
+      reps: Number(raw.reps),
+      date: raw.date ?? ''
+    }).subscribe({
+      next: () => {
+        this.editingProgressLogId = null;
+        this.openProgress(this.progressExerciseId as number, this.progressExerciseName);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.progressError = error.error?.message ?? 'No se pudo actualizar el log';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  deleteProgressLog(logId: number): void {
+    if (!window.confirm('¿Eliminar este log?')) {
+      return;
+    }
+
+    if (this.progressExerciseId === null) {
+      return;
+    }
+
+    this.userService.deleteLog(logId).subscribe({
+      next: () => {
+        if (this.editingProgressLogId === logId) {
+          this.editingProgressLogId = null;
+        }
+        this.openProgress(this.progressExerciseId as number, this.progressExerciseName);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.progressError = error.error?.message ?? 'No se pudo eliminar el log';
         this.cdr.markForCheck();
       }
     });
@@ -419,5 +494,13 @@ export class UserDashboardComponent implements OnInit {
     const last = points[points.length - 1];
     path += ` T ${last.x} ${last.y}`;
     return path;
+  }
+
+  private toDateInput(value: string): string {
+    return value.slice(0, 10);
+  }
+
+  private getTodayDateInput(): string {
+    return new Date().toISOString().slice(0, 10);
   }
 }

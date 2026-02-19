@@ -354,6 +354,26 @@
   color: var(--color-text-muted);
 }
 
+.log-actions {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.log-actions button {
+  min-height: 30px;
+  padding: 0.32rem 0.65rem;
+  font-size: 0.74rem;
+}
+
+.log-actions .danger {
+  color: var(--color-danger);
+}
+
+.edit-log-form {
+  width: 100%;
+}
+
 .pr-badge {
   border-radius: 999px;
   padding: 0.1rem 0.46rem;
@@ -445,5 +465,9 @@
 
   .log-meta {
     justify-items: start;
+  }
+
+  .log-actions {
+    width: 100%;
   }
 }

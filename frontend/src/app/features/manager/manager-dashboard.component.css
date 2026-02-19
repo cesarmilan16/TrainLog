@@ -424,11 +424,20 @@ hr {
   justify-content: space-between;
   align-items: center;
   font-weight: 700;
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-soft) 82%, var(--color-surface));
+}
+
+.create-toggle:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
 }
 
 .create-toggle strong {
   font-size: 1.1rem;
   line-height: 1;
+  color: var(--color-primary-strong);
 }
 
 .create-form {

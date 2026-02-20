@@ -71,7 +71,7 @@
             @for (exercise of workout.exercises; track exercise.id) {
               <div class="exercise">
                 <div class="exercise-content">
-                  <strong class="exercise-name">#{{ exercise.order_index }} {{ exercise.name }}</strong>
+                  <strong class="exercise-name">{{ exercise.name }}</strong>
                   <p class="exercise-main">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
                   @if (exercise.rir !== null || exercise.rm_percent !== null) {
                     <p class="exercise-meta muted">
@@ -84,7 +84,7 @@
                   @if (exercise.last_log) {
                     <p class="exercise-meta muted log-chip">
                       Último: {{ exercise.last_log.weight }}kg x {{ exercise.last_log.reps }} ·
-                      {{ exercise.last_log.date | date:'mediumDate' }}
+                      {{ exercise.last_log.date | date:'d MMM y, HH:mm' }}
                     </p>
                   } @else {
                     <p class="muted">Sin logs todavía</p>
@@ -104,7 +104,10 @@
                     </div>
                     <div>
                       <label [for]="'new-log-date-' + exercise.id">Fecha</label>
-                      <input [id]="'new-log-date-' + exercise.id" type="date" formControlName="date" />
+                      <div class="two-col">
+                        <input [id]="'new-log-date-' + exercise.id" type="date" formControlName="date" />
+                        <input [id]="'new-log-time-' + exercise.id" type="time" formControlName="time" />
+                      </div>
                     </div>
                     <div class="row-actions">
                       <button type="button" (click)="saveLog(exercise.id)">Guardar</button>
@@ -218,7 +221,7 @@
                 r="3.8"
               >
                 <title>
-                  {{ point.log.date | date:'shortDate' }} · {{ point.log.weight }}kg x {{ point.log.reps }} · {{ getMetricLabel() }} {{ getMetricValue(point.log) | number:'1.0-1' }}
+                  {{ point.log.date | date:'d MMM y, HH:mm' }} · {{ point.log.weight }}kg x {{ point.log.reps }} · {{ getMetricLabel() }} {{ getMetricValue(point.log) | number:'1.0-1' }}
                 </title>
               </circle>
             }
@@ -241,7 +244,7 @@
               @if (editingProgressLogId !== log.id) {
                 <div>
                   <strong>{{ log.weight }}kg x {{ log.reps }}</strong>
-                  <small class="muted">{{ log.date | date:'mediumDate' }}</small>
+                  <small class="muted">{{ log.date | date:'d MMM y, HH:mm' }}</small>
                 </div>
                 <div class="log-meta">
                   <span>
@@ -264,7 +267,10 @@
                   </div>
                   <div>
                     <label [for]="'edit-log-date-' + log.id">Fecha</label>
-                    <input [id]="'edit-log-date-' + log.id" type="date" formControlName="date" />
+                    <div class="two-col">
+                      <input [id]="'edit-log-date-' + log.id" type="date" formControlName="date" />
+                      <input [id]="'edit-log-time-' + log.id" type="time" formControlName="time" />
+                    </div>
                   </div>
                   <div class="row-actions">
                     <button type="button" (click)="saveEditedProgressLog(log.id)">Guardar</button>
@@ -277,18 +283,19 @@
         </section>
       }
 
-      @if (confirmDeleteLogId !== null) {
-        <div class="confirm-delete-backdrop" (click)="closeDeleteLogConfirm()">
-          <div class="confirm-delete-card" (click)="$event.stopPropagation()">
-            <h4>Eliminar registro</h4>
-            <p class="muted">Esta acción no se puede deshacer.</p>
-            <div class="row-actions">
-              <button type="button" class="danger" (click)="confirmDeleteLog()">Eliminar</button>
-              <button type="button" class="ghost" (click)="closeDeleteLogConfirm()">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      }
     </section>
+  </div>
+}
+
+@if (confirmDeleteLogId !== null) {
+  <div class="confirm-delete-backdrop" (click)="closeDeleteLogConfirm()">
+    <div class="confirm-delete-card" (click)="$event.stopPropagation()">
+      <h4>Eliminar registro</h4>
+      <p class="muted">Esta acción no se puede deshacer.</p>
+      <div class="row-actions">
+        <button type="button" class="danger" (click)="confirmDeleteLog()">Eliminar</button>
+        <button type="button" class="ghost" (click)="closeDeleteLogConfirm()">Cancelar</button>
+      </div>
+    </div>
   </div>
 }

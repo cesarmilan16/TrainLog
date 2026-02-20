@@ -106,7 +106,6 @@ body.dark .manager::before {
   display: grid;
   gap: 0.58rem;
   max-height: 320px;
-  overflow: auto;
   padding-right: 0.1rem;
 }
 
@@ -132,7 +131,7 @@ body.dark .manager::before {
 .list-item:hover {
   background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
   border-color: color-mix(in srgb, var(--color-primary) 45%, var(--color-border));
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-sm);
 }
 
 .list-item:focus-visible {

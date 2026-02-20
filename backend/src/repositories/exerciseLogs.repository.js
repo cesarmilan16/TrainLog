@@ -29,10 +29,20 @@ function setExerciseMovementId(exerciseId, movementId) {
 
 function insertLog({ weight, reps, userId, exerciseId, movementId, date }) {
   if (date) {
+    const hasTime = typeof date === 'string' && date.trim().length > 10;
+    if (hasTime) {
+      return db
+        .prepare(`
+          INSERT INTO exercise_logs (weight, reps, date, user_id, exercise_id, movement_id)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `)
+        .run(weight, reps, date.trim(), userId, exerciseId, movementId);
+    }
+
     return db
       .prepare(`
         INSERT INTO exercise_logs (weight, reps, date, user_id, exercise_id, movement_id)
-        VALUES (?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, strftime('%Y-%m-%d %H:%M', ? || ' ' || time('now', 'localtime')), ?, ?, ?)
       `)
       .run(weight, reps, date, userId, exerciseId, movementId);
   }
@@ -75,8 +85,15 @@ function getLogOwnedByUser(logId, userId) {
 }
 
 function updateLog({ logId, weight, reps, date }) {
+  const hasTime = typeof date === 'string' && date.trim().length > 10;
+  if (hasTime) {
+    return db
+      .prepare('UPDATE exercise_logs SET weight = ?, reps = ?, date = ? WHERE id = ?')
+      .run(weight, reps, date.trim(), logId);
+  }
+
   return db
-    .prepare('UPDATE exercise_logs SET weight = ?, reps = ?, date = ? WHERE id = ?')
+    .prepare("UPDATE exercise_logs SET weight = ?, reps = ?, date = strftime('%Y-%m-%d %H:%M', ? || ' ' || time('now', 'localtime')) WHERE id = ?")
     .run(weight, reps, date, logId);
 }
 

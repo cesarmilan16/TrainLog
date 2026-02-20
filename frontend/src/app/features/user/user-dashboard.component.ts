@@ -49,13 +49,15 @@ export class UserDashboardComponent implements OnInit {
   readonly logForm = this.fb.group({
     weight: [null as number | null, [Validators.required, Validators.min(0)]],
     reps: [null as number | null, [Validators.required, Validators.min(1)]],
-    date: ['']
+    date: [''],
+    time: ['']
   });
 
   readonly editLogForm = this.fb.group({
     weight: [null as number | null, [Validators.required, Validators.min(0)]],
     reps: [null as number | null, [Validators.required, Validators.min(1)]],
-    date: ['', Validators.required]
+    date: ['', Validators.required],
+    time: ['']
   });
 
   ngOnInit(): void {
@@ -101,7 +103,12 @@ export class UserDashboardComponent implements OnInit {
 
   openLog(exerciseId: number): void {
     this.openedExerciseId = exerciseId;
-    this.logForm.reset({ weight: null, reps: null, date: this.getTodayDateInput() });
+    this.logForm.reset({
+      weight: null,
+      reps: null,
+      date: this.getTodayDateInput(),
+      time: this.getCurrentTimeInput()
+    });
   }
 
   openProgress(exerciseId: number, exerciseName: string): void {
@@ -192,7 +199,9 @@ export class UserDashboardComponent implements OnInit {
     }
 
     const { weight, reps } = this.logForm.getRawValue();
-    const date = (this.logForm.getRawValue().date ?? '').trim();
+    const rawDate = (this.logForm.getRawValue().date ?? '').trim();
+    const rawTime = (this.logForm.getRawValue().time ?? '').trim();
+    const date = this.buildDateTimeInput(rawDate, rawTime);
 
     // Tras guardar, recargamos dashboard para mostrar el último log actualizado.
     this.userService.addLog({
@@ -221,7 +230,8 @@ export class UserDashboardComponent implements OnInit {
     this.editLogForm.reset({
       weight: log.weight,
       reps: log.reps,
-      date: this.toDateInput(log.date)
+      date: this.toDateInput(log.date),
+      time: this.toTimeInput(log.date)
     });
     this.cdr.markForCheck();
   }
@@ -240,7 +250,7 @@ export class UserDashboardComponent implements OnInit {
     this.userService.updateLog(logId, {
       weight: Number(raw.weight),
       reps: Number(raw.reps),
-      date: raw.date ?? ''
+      date: this.buildDateTimeInput(raw.date ?? '', raw.time ?? '')
     }).subscribe({
       next: () => {
         this.editingProgressLogId = null;
@@ -344,7 +354,7 @@ export class UserDashboardComponent implements OnInit {
   }
 
   get volumeTotal(): number {
-    return this.filteredProgressLogs.reduce((sum, log) => sum + log.weight * log.reps, 0);
+    return this.filteredProgressLogs.reduce((sum, log) => sum + this.getVolumeValue(log), 0);
   }
 
   get trendPercent(): number | null {
@@ -466,6 +476,10 @@ export class UserDashboardComponent implements OnInit {
   }
 
   estimateOneRm(log: ExerciseLog): number {
+    if (log.weight === 0) {
+      return log.reps;
+    }
+
     return Number((log.weight * (1 + log.reps / 30)).toFixed(1));
   }
 
@@ -475,22 +489,40 @@ export class UserDashboardComponent implements OnInit {
     }
 
     if (this.progressMetric === 'volume') {
-      return log.weight * log.reps;
+      return this.getVolumeValue(log);
     }
 
     return this.estimateOneRm(log);
   }
 
   getMetricLabel(): string {
+    const hasOnlyBodyweightLogs = this.hasOnlyBodyweightLogs();
+
     if (this.progressMetric === 'weight') {
       return 'Peso';
     }
 
     if (this.progressMetric === 'volume') {
-      return 'Volumen';
+      return hasOnlyBodyweightLogs ? 'Reps' : 'Volumen';
     }
 
-    return '1RM';
+    return hasOnlyBodyweightLogs ? 'Reps' : '1RM';
+  }
+
+  getMetricUnit(): string {
+    if (this.progressMetric === 'weight') {
+      return 'kg';
+    }
+
+    if (this.progressMetric === 'erm') {
+      return this.hasOnlyBodyweightLogs() ? '' : 'kg';
+    }
+
+    return '';
+  }
+
+  get volumeTotalUnit(): string {
+    return this.hasOnlyBodyweightLogs() ? 'reps' : 'kg·rep';
   }
 
   private buildSmoothPath(points: Array<{ x: number; y: number }>): string {
@@ -517,12 +549,79 @@ export class UserDashboardComponent implements OnInit {
     return path;
   }
 
+  private getVolumeValue(log: ExerciseLog): number {
+    return log.weight > 0 ? log.weight * log.reps : log.reps;
+  }
+
+  private hasOnlyBodyweightLogs(): boolean {
+    return this.filteredProgressLogs.length > 0
+      && this.filteredProgressLogs.every((log) => log.weight === 0);
+  }
+
   private toDateInput(value: string): string {
     return value.slice(0, 10);
   }
 
+  private toTimeInput(value: string): string {
+    if (!value || value.length < 16) {
+      return this.getCurrentTimeInput();
+    }
+
+    return value.slice(11, 16);
+  }
+
   private getTodayDateInput(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private getCurrentTimeInput(): string {
+    const now = new Date();
+    const pad = (part: number) => String(part).padStart(2, '0');
+    return `${pad(now.getHours())}:${pad(now.getMinutes())}`;
+  }
+
+  private buildDateTimeInput(date: string, time: string): string {
+    const normalizedDate = this.normalizeDateForApi(date);
+    if (!normalizedDate) {
+      return '';
+    }
+
+    const safeTime = this.normalizeTimeForApi(time) || this.getCurrentTimeInput();
+    return `${normalizedDate} ${safeTime}`;
+  }
+
+  private normalizeDateForApi(value: string): string {
+    const trimmed = (value ?? '').trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (isoMatch) {
+      return trimmed;
+    }
+
+    const latamMatch = trimmed.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    if (latamMatch) {
+      const [, day, month, year] = latamMatch;
+      return `${year}-${month}-${day}`;
+    }
+
+    return '';
+  }
+
+  private normalizeTimeForApi(value: string): string {
+    const trimmed = (value ?? '').trim();
+    if (!trimmed) {
+      return '';
+    }
+
+    const hhmm = trimmed.match(/^(\d{2}):(\d{2})(?::\d{2})?$/);
+    if (!hhmm) {
+      return '';
+    }
+
+    return `${hhmm[1]}:${hhmm[2]}`;
   }
 
   private syncExpandedWorkouts(dashboard: DashboardWorkout[]): void {

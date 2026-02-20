@@ -58,7 +58,7 @@ function getLastLogByMovementAndUser(movementId, userId) {
       SELECT weight, reps, date
       FROM exercise_logs
       WHERE movement_id = ? AND user_id = ?
-      ORDER BY date DESC
+      ORDER BY date DESC, id DESC
       LIMIT 1
     `)
     .get(movementId, userId);

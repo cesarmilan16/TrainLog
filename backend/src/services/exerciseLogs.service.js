@@ -20,16 +20,38 @@ function parseOptionalLogDate(value) {
     return { value: null };
   }
 
-  if (typeof value !== 'string' || !/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  if (typeof value !== 'string') {
     return { error: true };
   }
 
-  const parsed = new Date(`${value}T00:00:00Z`);
+  const trimmed = value.trim();
+  const normalized = normalizeDateInput(trimmed);
+  if (!normalized) {
+    return { error: true };
+  }
+
+  const parsed = new Date(normalized.replace(' ', 'T'));
   if (Number.isNaN(parsed.getTime())) {
     return { error: true };
   }
 
-  return { value: `${value} 12:00:00` };
+  return { value: normalized };
+}
+
+function normalizeDateInput(value) {
+  const isoMatch = value.match(/^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::\d{2})?)?$/);
+  if (isoMatch) {
+    const [, y, m, d, hh, mm] = isoMatch;
+    return hh && mm ? `${y}-${m}-${d} ${hh}:${mm}` : `${y}-${m}-${d}`;
+  }
+
+  const latamMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::\d{2})?)?$/);
+  if (latamMatch) {
+    const [, d, m, y, hh, mm] = latamMatch;
+    return hh && mm ? `${y}-${m}-${d} ${hh}:${mm}` : `${y}-${m}-${d}`;
+  }
+
+  return null;
 }
 
 function resolveMovementIdForExercise(exercise, userId) {

@@ -191,6 +191,11 @@ body.dark .user::before {
   border-radius: 999px;
   padding: 0.28rem 0.6rem;
   display: inline-flex;
+  flex-wrap: wrap;
+  row-gap: 0.12rem;
+  column-gap: 0.3rem;
+  text-align: center;
+  white-space: normal;
 }
 
 .inline {
@@ -463,15 +468,16 @@ body.dark .exercise-actions .secondary {
 }
 
 .confirm-delete-backdrop {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  border-radius: 16px;
+  border-radius: 0;
   background: rgba(2, 6, 23, 0.45);
   backdrop-filter: blur(2px);
   display: grid;
   place-items: center;
-  z-index: 5;
+  z-index: 120;
   padding: 1rem;
+  padding-bottom: calc(1rem + env(safe-area-inset-bottom));
 }
 
 .confirm-delete-card {

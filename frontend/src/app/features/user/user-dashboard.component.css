@@ -215,6 +215,54 @@ body.dark .user::before {
   margin-top: 0.65rem;
 }
 
+.exercise-actions .ghost,
+.exercise-actions .secondary {
+  min-height: 36px;
+  padding: 0.42rem 0.82rem;
+  font-size: 0.82rem;
+}
+
+.exercise-actions .ghost {
+  border: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--color-surface-soft) 78%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.exercise-actions .ghost:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 44%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 12%, var(--color-surface));
+}
+
+.exercise-actions .secondary {
+  border: 1px solid transparent;
+  background: linear-gradient(120deg, var(--color-primary), var(--color-primary-strong));
+  color: #08240f;
+}
+
+.exercise-actions .secondary:hover {
+  filter: saturate(1.08);
+}
+
+html.dark .exercise-actions .ghost,
+body.dark .exercise-actions .ghost {
+  border-color: var(--color-border-strong);
+  background: rgba(30, 41, 59, 0.9);
+  color: #e2e8f0;
+}
+
+html.dark .exercise-actions .ghost:hover,
+body.dark .exercise-actions .ghost:hover {
+  border-color: rgba(74, 222, 128, 0.58);
+  background: rgba(22, 101, 52, 0.28);
+  color: #f0fdf4;
+}
+
+html.dark .exercise-actions .secondary,
+body.dark .exercise-actions .secondary {
+  background: linear-gradient(120deg, #4ade80, #22c55e);
+  color: #05200e;
+}
+
 .sheet-backdrop {
   position: fixed;
   inset: 0;

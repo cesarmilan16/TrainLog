@@ -107,7 +107,14 @@ body.dark .manager::before {
   gap: 0.58rem;
   max-height: 320px;
   overflow-y: auto;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
   padding-right: 0.1rem;
+}
+
+.list::-webkit-scrollbar,
+.exercise-list::-webkit-scrollbar {
+  display: none;
 }
 
 .list-row {

@@ -106,6 +106,7 @@ body.dark .manager::before {
   display: grid;
   gap: 0.58rem;
   max-height: 320px;
+  overflow-y: auto;
   padding-right: 0.1rem;
 }
 

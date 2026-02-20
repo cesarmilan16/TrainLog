@@ -58,7 +58,7 @@
       }
 
       @if (!loadingClients) {
-        <div class="list">
+        <div class="list list-top-offset">
           @for (client of clients; track client.id) {
             <div class="list-row" (click)="$event.stopPropagation()">
               <button
@@ -155,7 +155,7 @@
 
           <!-- Forzamos recreación del bloque al cambiar cliente para disparar :leave/:enter. -->
           @for (clientKey of [selectedClientId]; track clientKey) {
-            <div class="list" @detailFadeSlide>
+            <div class="list list-top-offset" @detailFadeSlide>
               @if (loadingWorkouts && workouts.length === 0) {
                 <div class="list skeleton-list" aria-hidden="true">
                   @for (row of [1, 2, 3]; track row) {

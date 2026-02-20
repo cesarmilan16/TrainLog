@@ -49,7 +49,7 @@ export class ManagerService {
     return this.http.post('/mesocycles', payload);
   }
 
-  createWorkout(payload: { name: string; userId: number }) {
+  createWorkout(payload: { name: string; userId: number; mesocycleId?: number | null }) {
     return this.http.post('/workouts', payload);
   }
 

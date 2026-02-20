@@ -4,6 +4,7 @@ const routeUsers = require('./routes/users.routes');
 const routeWorkouts = require('./routes/workouts.routes');
 const routeExercises = require('./routes/exercises.routes');
 const routeLog = require('./routes/exerciseLogs.routes');
+const routeMesocycles = require('./routes/mesocycles.routes');
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use('/users', routeUsers);
 app.use('/workouts', routeWorkouts);
 app.use('/exercises', routeExercises);
 app.use('/logs', routeLog);
+app.use('/mesocycles', routeMesocycles);
 
 app.use((_req, res) => {
   return res.status(404).json({ message: 'Ruta no encontrada' });

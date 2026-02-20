@@ -17,12 +17,12 @@ function getWorkoutsManager(req, res) {
 }
 
 function getUserDashboard(req, res) {
-  const result = workoutsService.getUserDashboard(req.user.id);
+  const result = workoutsService.getUserDashboard(req.user.id, req.query.mesocycleId);
   return handleResult(res, result, (data) => ({ data }));
 }
 
 function getManagerDashboard(req, res) {
-  const result = workoutsService.getManagerDashboard(req.params.userId, req.user.id);
+  const result = workoutsService.getManagerDashboard(req.params.userId, req.user.id, req.query.mesocycleId);
   return handleResult(res, result, (data) => ({ data }));
 }
 

@@ -2,7 +2,7 @@ const workoutsRepository = require('../repositories/workouts.repository');
 const { parsePositiveInt, isSqliteUniqueError } = require('../shared/utils/data.helpers');
 
 function newWorkout(data, managerId) {
-  const { name, userId } = data;
+  const { name, userId, mesocycleId } = data;
 
   if (!name || !name.trim()) {
     return {
@@ -28,11 +28,39 @@ function newWorkout(data, managerId) {
   }
 
   try {
-    const result = workoutsRepository.insertWorkout({
-      name: name.trim(),
-      userId: parsedUserId,
-      managerId
-    });
+    const parsedMesocycleId = mesocycleId === undefined || mesocycleId === null
+      ? null
+      : parsePositiveInt(mesocycleId);
+
+    if (mesocycleId !== undefined && mesocycleId !== null && !parsedMesocycleId) {
+      return {
+        status: 400,
+        error: 'mesocycleId inválido'
+      };
+    }
+
+    if (parsedMesocycleId) {
+      const mesocycle = workoutsRepository.getMesocycleByIdForUser(parsedMesocycleId, parsedUserId);
+      if (!mesocycle) {
+        return {
+          status: 400,
+          error: 'Este mesociclo no pertenece al usuario'
+        };
+      }
+    }
+
+    const result = parsedMesocycleId
+      ? workoutsRepository.insertWorkoutWithMesocycle({
+        name: name.trim(),
+        userId: parsedUserId,
+        managerId,
+        mesocycleId: parsedMesocycleId
+      })
+      : workoutsRepository.insertWorkout({
+        name: name.trim(),
+        userId: parsedUserId,
+        managerId
+      });
 
     return {
       message: 'Entrenamiento creado',
@@ -78,13 +106,39 @@ function getWorkoutsManager(userId, managerId) {
   return workouts;
 }
 
-function getUserDashboard(userId) {
+function parseDashboardMesocycleFilter(value) {
+  if (value === undefined || value === null || value === '') {
+    return { value: undefined };
+  }
+
+  if (String(value).toLowerCase() === 'none') {
+    return { value: null };
+  }
+
+  const parsed = parsePositiveInt(value);
+  if (!parsed) {
+    return { error: 'mesocycleId inválido' };
+  }
+
+  return { value: parsed };
+}
+
+function getUserDashboard(userId, mesocycleId) {
+  const parsedFilter = parseDashboardMesocycleFilter(mesocycleId);
+  if (parsedFilter.error) {
+    return {
+      status: 400,
+      error: parsedFilter.error
+    };
+  }
+
   try {
-    const workouts = workoutsRepository.listDashboardWorkoutsByUser(userId);
+    const workouts = workoutsRepository.listDashboardWorkoutsByUser(userId, parsedFilter.value);
 
     return workouts.map((workout) => ({
       id: workout.id,
       name: workout.name,
+      mesocycle_id: workout.mesocycle_id ?? null,
       exercises: workoutsRepository.listActiveExercisesByWorkout(workout.id).map((exercise) => ({
         ...exercise,
         last_log: workoutsRepository.getLastLogByMovementAndUser(exercise.movement_id, userId) || null
@@ -99,7 +153,7 @@ function getUserDashboard(userId) {
   }
 }
 
-function getManagerDashboard(userId, managerId) {
+function getManagerDashboard(userId, managerId, mesocycleId) {
   const parsedUserId = parsePositiveInt(userId);
   if (!parsedUserId) {
     return {
@@ -116,7 +170,7 @@ function getManagerDashboard(userId, managerId) {
     };
   }
 
-  return getUserDashboard(parsedUserId);
+  return getUserDashboard(parsedUserId, mesocycleId);
 }
 
 function deleteWorkout(workoutId, managerId) {
@@ -179,6 +233,31 @@ function updateWorkout(workoutId, payload, managerId) {
 
   try {
     workoutsRepository.renameWorkout(id, name);
+
+    if (payload?.mesocycleId !== undefined) {
+      const parsedMesocycleId = payload.mesocycleId === null
+        ? null
+        : parsePositiveInt(payload.mesocycleId);
+
+      if (payload.mesocycleId !== null && !parsedMesocycleId) {
+        return {
+          status: 400,
+          error: 'mesocycleId inválido'
+        };
+      }
+
+      if (parsedMesocycleId) {
+        const mesocycle = workoutsRepository.getMesocycleByIdForUser(parsedMesocycleId, ownership.user_id);
+        if (!mesocycle) {
+          return {
+            status: 400,
+            error: 'Este mesociclo no pertenece al usuario'
+          };
+        }
+      }
+
+      workoutsRepository.setWorkoutMesocycle(id, parsedMesocycleId);
+    }
 
     const workout = workoutsRepository.getActiveWorkoutById(id);
 

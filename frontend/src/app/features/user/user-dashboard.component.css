@@ -527,6 +527,17 @@ body.dark .metric-switch .ghost.active {
   color: #f0fdf4;
 }
 
+html.dark .inline .row-actions .ghost,
+body.dark .inline .row-actions .ghost,
+html.dark .progress-sheet .close-btn,
+body.dark .progress-sheet .close-btn,
+html.dark .progress-sheet .range-switch .ghost,
+body.dark .progress-sheet .range-switch .ghost,
+html.dark .progress-sheet .metric-switch .ghost,
+body.dark .progress-sheet .metric-switch .ghost {
+  color: #f8fafc;
+}
+
 html.dark .row-actions button:not(.ghost),
 body.dark .row-actions button:not(.ghost),
 html.dark .edit-log-form button:not(.ghost),

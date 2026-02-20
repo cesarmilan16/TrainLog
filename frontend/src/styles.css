@@ -94,11 +94,6 @@ button {
   transition: all 0.2s ease;
 }
 
-html.dark button,
-body.dark button {
-  color: #05200e;
-}
-
 button:hover {
   transform: translateY(-2px);
   box-shadow: var(--shadow-sm);

@@ -22,6 +22,7 @@ function login(req, res) {
     message: data.message,
     id: data.id,
     email: data.email,
+    name: data.name,
     token: data.token
   }));
 }

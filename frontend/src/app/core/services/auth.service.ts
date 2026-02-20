@@ -25,6 +25,7 @@ export class AuthService {
         const user: AuthUser = {
           id: response.id,
           email: response.email,
+          name: response.name || this.buildNameFromEmail(response.email),
           role
         };
 
@@ -75,5 +76,18 @@ export class AuthService {
     } catch {
       return null;
     }
+  }
+
+  private buildNameFromEmail(email: string): string {
+    const localPart = String(email ?? '').split('@')[0]?.trim() ?? '';
+    if (!localPart) {
+      return 'Usuario';
+    }
+
+    return localPart
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1).toLowerCase())
+      .join(' ');
   }
 }

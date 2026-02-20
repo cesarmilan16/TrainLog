@@ -12,7 +12,7 @@ function insertUser({ email, hashedPassword, name, managerId }) {
 
 function getUserAuthByEmail(email) {
   return db
-    .prepare('SELECT id, email, password, role FROM users WHERE email = ?')
+    .prepare('SELECT id, email, password, role, name FROM users WHERE email = ?')
     .get(email);
 }
 

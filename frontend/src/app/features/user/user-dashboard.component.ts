@@ -40,6 +40,7 @@ export class UserDashboardComponent implements OnInit {
   progressRange: 7 | 30 | 90 | 0 = 30;
   progressMetric: 'weight' | 'erm' | 'volume' = 'erm';
   isDarkMode = false;
+  userDisplayName = 'Usuario';
   readonly chartWidth = 360;
   readonly chartHeight = 150;
   readonly chartPadding = 16;
@@ -58,6 +59,7 @@ export class UserDashboardComponent implements OnInit {
 
   ngOnInit(): void {
     this.isDarkMode = this.themeService.isDarkMode();
+    this.userDisplayName = this.authService.currentUser()?.name || this.buildNameFromEmail(this.authService.currentUser()?.email);
     this.updateViewportState();
     this.fetchDashboard();
   }
@@ -502,5 +504,18 @@ export class UserDashboardComponent implements OnInit {
 
   private getTodayDateInput(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private buildNameFromEmail(email?: string): string {
+    const localPart = String(email ?? '').split('@')[0]?.trim() ?? '';
+    if (!localPart) {
+      return 'Usuario';
+    }
+
+    return localPart
+      .split(/[._-]+/)
+      .filter(Boolean)
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1).toLowerCase())
+      .join(' ');
   }
 }

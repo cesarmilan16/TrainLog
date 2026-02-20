@@ -1,18 +1,26 @@
 <section class="login-wrap">
   <div class="login-grid">
-    <aside class="card login-info">
-      <span class="badge">TrainLog Pro</span>
-      <h1>Entrena. Registra. Progresa.</h1>
-      <p class="muted">Experiencia de entrenamiento real, con enfoque en rendimiento y consistencia.</p>
-
-      <div class="feature-strip">
-        <span>Rutinas por bloques</span>
-        <span>Historial de cargas</span>
-        <span>Seguimiento de progreso</span>
-      </div>
-    </aside>
-
     <div class="card login-card">
+      <div class="login-card-head">
+        <span class="badge">TrainLog</span>
+        <button
+          type="button"
+          class="theme-toggle"
+          [attr.aria-label]="isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'"
+          [attr.title]="isDarkMode ? 'Activar modo claro' : 'Activar modo oscuro'"
+          (click)="toggleTheme()"
+        >
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="2"></circle>
+            <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          </svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+          </svg>
+          <span class="sr-only">{{ isDarkMode ? 'Modo claro' : 'Modo oscuro' }}</span>
+        </button>
+      </div>
+
       <p class="eyebrow">Workout App Access</p>
       <h2>Iniciar sesión</h2>
 

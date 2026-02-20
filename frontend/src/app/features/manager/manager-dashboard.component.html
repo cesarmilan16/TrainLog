@@ -146,6 +146,79 @@
       }
 
       @if (selectedClientId) {
+        <div class="section-title section-title-sub">
+          <h3>Mesociclos</h3>
+          <span class="muted">{{ mesocycles.length }}</span>
+        </div>
+
+        @if (mesocycles.length === 0) {
+          <p class="muted empty">Este cliente todavía no tiene mesociclos.</p>
+        } @else {
+          <div class="list mesocycle-list">
+            @for (mesocycle of mesocycles; track mesocycle.id) {
+              <div class="list-item">
+                <span class="title-row">
+                  <span class="title">{{ mesocycle.name }}</span>
+                  <span class="mini-chip mini-chip-soft">{{ mesocycle.status }}</span>
+                </span>
+                <small>{{ mesocycle.startDate }} → {{ mesocycle.endDate }}</small>
+                <small class="muted">{{ mesocycle.goal }}</small>
+              </div>
+            }
+          </div>
+        }
+
+        <div class="create-section">
+          <button type="button" class="ghost create-toggle" (click)="toggleCreateSection('mesocycle')">
+            <span>Nuevo mesociclo</span>
+            <strong>{{ showCreateMesocycle ? '−' : '+' }}</strong>
+          </button>
+
+          @if (showCreateMesocycle) {
+            <form [formGroup]="createMesocycleForm" (ngSubmit)="createMesocycle()" class="form-row create-form">
+              <div class="field">
+                <input type="text" placeholder="Nombre del mesociclo" formControlName="name" />
+                @if (createMesocycleForm.controls.name.touched && createMesocycleForm.controls.name.invalid) {
+                  <small class="field-error">El nombre es obligatorio</small>
+                }
+              </div>
+              <div class="field">
+                <input type="text" placeholder="Objetivo (ej. Hipertrofia)" formControlName="goal" />
+                @if (createMesocycleForm.controls.goal.touched && createMesocycleForm.controls.goal.invalid) {
+                  <small class="field-error">El objetivo es obligatorio</small>
+                }
+              </div>
+              <div class="mini-grid mini-grid-intensity">
+                <div class="field">
+                  <label for="new-mesocycle-start">Inicio</label>
+                  <input id="new-mesocycle-start" type="date" formControlName="startDate" />
+                  @if (createMesocycleForm.controls.startDate.touched && createMesocycleForm.controls.startDate.invalid) {
+                    <small class="field-error">Fecha de inicio obligatoria</small>
+                  }
+                </div>
+                <div class="field">
+                  <label for="new-mesocycle-end">Fin</label>
+                  <input id="new-mesocycle-end" type="date" formControlName="endDate" />
+                  @if (createMesocycleForm.controls.endDate.touched && createMesocycleForm.controls.endDate.invalid) {
+                    <small class="field-error">Fecha de fin obligatoria</small>
+                  }
+                </div>
+              </div>
+              <div class="field">
+                <label for="new-mesocycle-status">Estado</label>
+                <select id="new-mesocycle-status" formControlName="status">
+                  <option value="PLANNED">Planificado</option>
+                  <option value="ACTIVE">Activo</option>
+                  <option value="COMPLETED">Completado</option>
+                </select>
+              </div>
+              <button type="submit" [disabled]="!selectedClientId">Crear mesociclo</button>
+            </form>
+          }
+        </div>
+
+        <hr />
+
         <div class="workout-detail-shell">
           @if (loadingWorkouts) {
             <div class="loading-overlay muted">Cargando...</div>

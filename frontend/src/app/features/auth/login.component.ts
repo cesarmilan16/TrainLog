@@ -1,9 +1,10 @@
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, inject } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../core/services/auth.service';
+import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -13,19 +14,30 @@ import { AuthService } from '../../core/services/auth.service';
   styleUrl: './login.component.css',
   changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
   loading = false;
   errorMessage = '';
+  isDarkMode = false;
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
     password: ['', [Validators.required]]
   });
+
+  ngOnInit(): void {
+    this.isDarkMode = this.themeService.isDarkMode();
+  }
+
+  toggleTheme(): void {
+    this.isDarkMode = this.themeService.toggleTheme() === 'dark';
+    this.cdr.markForCheck();
+  }
 
   submit(): void {
     this.errorMessage = '';

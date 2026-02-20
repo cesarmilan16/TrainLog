@@ -213,6 +213,7 @@ function seedExampleData({ reset = false } = {}) {
   const usersCount = db.prepare('SELECT COUNT(*) AS total FROM users').get().total;
 
   if (!reset && usersCount > 0) {
+    ensureDemoMesocycleForExistingData();
     return;
   }
 
@@ -445,6 +446,60 @@ function seedExampleData({ reset = false } = {}) {
   });
 
   seedTx();
+}
+
+function ensureDemoMesocycleForExistingData() {
+  const demoManager = db
+    .prepare("SELECT id FROM users WHERE email = 'demo@trainlog.com' AND role = 'MANAGER'")
+    .get();
+  const demoUser = db
+    .prepare("SELECT id FROM users WHERE email = 'cliente@trainlog.com' AND role = 'USER'")
+    .get();
+
+  if (!demoUser) {
+    return;
+  }
+
+  const mesocycleCount = db
+    .prepare('SELECT COUNT(*) AS total FROM mesocycles WHERE user_id = ?')
+    .get(demoUser.id).total;
+
+  if (mesocycleCount > 0) {
+    return;
+  }
+
+  const backfillTx = db.transaction(() => {
+    const mesocycleId = db
+      .prepare(`
+        INSERT INTO mesocycles (name, goal, start_date, end_date, status, user_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        'Mesociclo Demo Base',
+        'Hipertrofia',
+        '2026-02-02',
+        '2026-03-29',
+        'ACTIVE',
+        demoUser.id
+      ).lastInsertRowid;
+
+    const existingWorkout = db
+      .prepare('SELECT id FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC LIMIT 1')
+      .get(demoUser.id);
+
+    if (existingWorkout) {
+      db.prepare('UPDATE workouts SET mesocycle_id = ? WHERE id = ?')
+        .run(mesocycleId, existingWorkout.id);
+      return;
+    }
+
+    if (demoManager) {
+      db.prepare('INSERT INTO workouts (name, user_id, manager_id, mesocycle_id) VALUES (?, ?, ?, ?)')
+        .run('Meso Full Body Demo', demoUser.id, demoManager.id, mesocycleId);
+    }
+  });
+
+  backfillTx();
 }
 
 function closeDb() {

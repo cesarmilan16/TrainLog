@@ -7,7 +7,7 @@ import { animate, style, transition, trigger } from '@angular/animations';
 import { AuthService } from '../../core/services/auth.service';
 import { ManagerService } from '../../core/services/manager.service';
 import { ThemeService } from '../../core/services/theme.service';
-import { Exercise, ManagerClient, MovementSuggestion, Workout } from '../../core/models';
+import { Exercise, ManagerClient, Mesocycle, MovementSuggestion, Workout } from '../../core/models';
 
 @Component({
   selector: 'app-manager-dashboard',
@@ -39,6 +39,7 @@ export class ManagerDashboardComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   clients: ManagerClient[] = [];
+  mesocycles: Mesocycle[] = [];
   workouts: Workout[] = [];
   exercises: Exercise[] = [];
 
@@ -55,6 +56,7 @@ export class ManagerDashboardComponent implements OnInit {
   loadingExercises = false;
   errorMessage = '';
   showCreateClient = false;
+  showCreateMesocycle = false;
   showCreateWorkout = false;
   showCreateExercise = false;
   createExerciseMovementId: number | null = null;
@@ -83,6 +85,14 @@ export class ManagerDashboardComponent implements OnInit {
 
   readonly createWorkoutForm = this.fb.nonNullable.group({
     name: ['', Validators.required]
+  });
+
+  readonly createMesocycleForm = this.fb.nonNullable.group({
+    name: ['', Validators.required],
+    goal: ['', Validators.required],
+    startDate: ['', Validators.required],
+    endDate: ['', Validators.required],
+    status: ['ACTIVE' as Mesocycle['status'], Validators.required]
   });
 
   readonly createExerciseForm = this.fb.group({
@@ -172,6 +182,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.selectedClientId = clientId;
     this.selectedWorkoutId = null;
     // Evita mostrar workouts del cliente anterior mientras llega la nueva carga.
+    this.mesocycles = [];
     this.workouts = [];
     this.exercises = [];
     this.createExerciseSuggestions = [];
@@ -180,6 +191,7 @@ export class ManagerDashboardComponent implements OnInit {
     this.editExerciseMovementId = null;
     this.closeSuggestionLists();
     this.closeMenus();
+    this.fetchMesocycles(clientId);
     this.fetchWorkouts(clientId);
   }
 
@@ -361,6 +373,7 @@ export class ManagerDashboardComponent implements OnInit {
         if (this.selectedClientId === clientId) {
           this.selectedClientId = null;
           this.selectedWorkoutId = null;
+          this.mesocycles = [];
           this.workouts = [];
           this.exercises = [];
         }
@@ -393,6 +406,57 @@ export class ManagerDashboardComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  fetchMesocycles(userId: number): void {
+    this.managerService.getUserMesocycles(userId).subscribe({
+      next: (mesocycles) => {
+        this.mesocycles = mesocycles;
+        this.cdr.markForCheck();
+      },
+      error: (error: HttpErrorResponse) => {
+        this.mesocycles = [];
+        this.errorMessage = error.error?.message ?? 'No se pudieron cargar los mesociclos';
+        this.cdr.markForCheck();
+      }
+    });
+  }
+
+  createMesocycle(): void {
+    if (this.createMesocycleForm.invalid || !this.selectedClientId) {
+      this.createMesocycleForm.markAllAsTouched();
+      return;
+    }
+
+    const formValue = this.createMesocycleForm.getRawValue();
+
+    this.managerService
+      .createMesocycle({
+        name: formValue.name.trim(),
+        goal: formValue.goal.trim(),
+        startDate: formValue.startDate,
+        endDate: formValue.endDate,
+        status: formValue.status,
+        userId: this.selectedClientId
+      })
+      .subscribe({
+        next: () => {
+          this.createMesocycleForm.reset({
+            name: '',
+            goal: '',
+            startDate: '',
+            endDate: '',
+            status: 'ACTIVE'
+          });
+          this.showCreateMesocycle = false;
+          this.fetchMesocycles(this.selectedClientId as number);
+          this.cdr.markForCheck();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.errorMessage = error.error?.message ?? 'No se pudo crear el mesociclo';
+          this.cdr.markForCheck();
+        }
+      });
   }
 
   createWorkout(): void {
@@ -591,9 +655,14 @@ export class ManagerDashboardComponent implements OnInit {
     return this.clients.reduce((total, client) => total + client.workouts_count, 0);
   }
 
-  toggleCreateSection(section: 'client' | 'workout' | 'exercise'): void {
+  toggleCreateSection(section: 'client' | 'mesocycle' | 'workout' | 'exercise'): void {
     if (section === 'client') {
       this.showCreateClient = !this.showCreateClient;
+      return;
+    }
+
+    if (section === 'mesocycle') {
+      this.showCreateMesocycle = !this.showCreateMesocycle;
       return;
     }
 

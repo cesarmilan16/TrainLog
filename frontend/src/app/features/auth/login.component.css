@@ -15,9 +15,9 @@
   position: absolute;
   inset: 0;
   background:
-    linear-gradient(120deg, rgba(2, 6, 23, 0.82), rgba(2, 6, 23, 0.62)),
+    linear-gradient(120deg, rgba(248, 250, 252, 0.9), rgba(226, 232, 240, 0.86)),
     url('/login-bg.png') center/cover no-repeat,
-    linear-gradient(135deg, #05070c, #0f172a);
+    linear-gradient(135deg, #f8fafc, #e2e8f0);
   z-index: -2;
 }
 
@@ -26,63 +26,49 @@
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(45rem 28rem at 18% 88%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 65%),
-    radial-gradient(44rem 28rem at 90% 8%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 62%);
+    radial-gradient(45rem 28rem at 18% 88%, color-mix(in srgb, var(--color-primary) 20%, transparent), transparent 65%),
+    radial-gradient(44rem 28rem at 90% 8%, color-mix(in srgb, #38bdf8 14%, transparent), transparent 62%);
   z-index: -1;
 }
 
+html.dark .login-wrap::before,
+body.dark .login-wrap::before {
+  background:
+    linear-gradient(120deg, rgba(2, 6, 23, 0.82), rgba(2, 6, 23, 0.62)),
+    url('/login-bg.png') center/cover no-repeat,
+    linear-gradient(135deg, #05070c, #0f172a);
+}
+
+html.dark .login-wrap::after,
+body.dark .login-wrap::after {
+  background:
+    radial-gradient(45rem 28rem at 18% 88%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 65%),
+    radial-gradient(44rem 28rem at 90% 8%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 62%);
+}
+
 .login-grid {
-  width: min(1080px, 100%);
+  width: min(520px, 100%);
   padding-inline: min(2.8vw, 1rem);
   display: grid;
-  grid-template-columns: 1.06fr 0.94fr;
-  gap: 1rem;
-}
-
-.login-info {
-  display: grid;
-  align-content: start;
-  gap: 0.95rem;
-  color: #e5e7eb;
-  background: linear-gradient(160deg, rgba(15, 23, 42, 0.82), rgba(15, 23, 42, 0.56));
-  border-color: color-mix(in srgb, var(--color-primary) 36%, transparent);
-  backdrop-filter: blur(6px);
-}
-
-.login-info h1 {
-  font-size: clamp(1.6rem, 3vw, 2.3rem);
-  line-height: 0.95;
-  color: #f8fafc;
-}
-
-.login-info .muted {
-  color: #cbd5e1;
-}
-
-.feature-strip {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.45rem;
-}
-
-.feature-strip span {
-  background: color-mix(in srgb, var(--color-primary) 20%, transparent);
-  border: 1px solid color-mix(in srgb, var(--color-primary) 45%, transparent);
-  color: #dcfce7;
-  border-radius: 999px;
-  padding: 0.25rem 0.62rem;
-  font-size: 0.76rem;
-  font-weight: 700;
+  grid-template-columns: 1fr;
+  gap: 0.8rem;
 }
 
 .login-card {
   width: 100%;
-  max-width: 440px;
-  justify-self: end;
+  max-width: 520px;
+  justify-self: stretch;
   padding: 1.35rem;
-  background: color-mix(in srgb, var(--color-surface) 88%, rgba(255, 255, 255, 0.72));
+  background: color-mix(in srgb, var(--color-surface) 90%, rgba(255, 255, 255, 0.8));
   backdrop-filter: blur(10px);
   box-shadow: var(--shadow-lg);
+}
+
+.login-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 
 .eyebrow {
@@ -100,14 +86,8 @@ h2 {
 }
 
 @media (max-width: 900px) {
-  .login-grid {
-    grid-template-columns: 1fr;
-    width: min(540px, 100%);
-  }
-
   .login-card {
-    justify-self: stretch;
-    max-width: none;
+    max-width: 520px;
   }
 }
 
@@ -123,15 +103,8 @@ h2 {
     padding-inline: 0;
   }
 
-  .login-info {
-    gap: 0.65rem;
-    padding: 0.9rem;
-    order: 2;
-  }
-
   .login-card {
     padding: 1rem;
-    order: 1;
   }
 
   .login-card h2 {
@@ -143,10 +116,6 @@ h2 {
 @media (max-width: 430px) {
   .login-wrap {
     padding-top: max(0.55rem, env(safe-area-inset-top));
-  }
-
-  .login-info {
-    display: none;
   }
 
   .login-card {

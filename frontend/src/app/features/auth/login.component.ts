@@ -26,11 +26,7 @@ export class LoginComponent implements OnInit {
   isDarkMode = false;
   readonly demoUsers = [
     { label: 'Manager Demo', email: 'demo@trainlog.com' },
-    { label: 'Cliente Demo', email: 'cliente@trainlog.com' },
-    { label: 'Cesar', email: 'cesar@trainlog.com' },
-    { label: 'Alegria', email: 'alegria@trainlog.com' },
-    { label: 'Alba', email: 'alba@trainlog.com' },
-    { label: 'Jose', email: 'jose@trainlog.com' }
+    { label: 'Cliente Demo', email: 'cliente@trainlog.com' }
   ] as const;
 
   readonly form = this.fb.nonNullable.group({

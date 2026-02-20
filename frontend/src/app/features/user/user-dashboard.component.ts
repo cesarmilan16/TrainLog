@@ -35,6 +35,7 @@ export class UserDashboardComponent implements OnInit {
   progressExerciseName = '';
   progressLogs: ExerciseLog[] = [];
   editingProgressLogId: number | null = null;
+  confirmDeleteLogId: number | null = null;
   progressLoading = false;
   progressError = '';
   progressRange: 7 | 30 | 90 | 0 = 30;
@@ -46,13 +47,13 @@ export class UserDashboardComponent implements OnInit {
   readonly chartPadding = 16;
 
   readonly logForm = this.fb.group({
-    weight: [null as number | null, [Validators.required, Validators.min(1)]],
+    weight: [null as number | null, [Validators.required, Validators.min(0)]],
     reps: [null as number | null, [Validators.required, Validators.min(1)]],
     date: ['']
   });
 
   readonly editLogForm = this.fb.group({
-    weight: [null as number | null, [Validators.required, Validators.min(1)]],
+    weight: [null as number | null, [Validators.required, Validators.min(0)]],
     reps: [null as number | null, [Validators.required, Validators.min(1)]],
     date: ['', Validators.required]
   });
@@ -130,6 +131,7 @@ export class UserDashboardComponent implements OnInit {
     this.progressExerciseName = '';
     this.progressLogs = [];
     this.editingProgressLogId = null;
+    this.confirmDeleteLogId = null;
     this.progressLoading = false;
     this.progressError = '';
     this.progressRange = 30;
@@ -251,17 +253,32 @@ export class UserDashboardComponent implements OnInit {
     });
   }
 
-  deleteProgressLog(logId: number): void {
-    if (!window.confirm('¿Eliminar este log?')) {
+  openDeleteLogConfirm(logId: number): void {
+    this.confirmDeleteLogId = logId;
+    this.cdr.markForCheck();
+  }
+
+  closeDeleteLogConfirm(): void {
+    this.confirmDeleteLogId = null;
+    this.cdr.markForCheck();
+  }
+
+  confirmDeleteLog(): void {
+    if (!this.confirmDeleteLogId) {
       return;
     }
 
+    this.deleteProgressLog(this.confirmDeleteLogId);
+  }
+
+  private deleteProgressLog(logId: number): void {
     if (this.progressExerciseId === null) {
       return;
     }
 
     this.userService.deleteLog(logId).subscribe({
       next: () => {
+        this.confirmDeleteLogId = null;
         if (this.editingProgressLogId === logId) {
           this.editingProgressLogId = null;
         }

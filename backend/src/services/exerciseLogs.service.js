@@ -1,6 +1,11 @@
 const exerciseLogsRepository = require('../repositories/exerciseLogs.repository');
 const { parsePositiveInt } = require('../shared/utils/data.helpers');
 
+function parseNonNegativeInt(value) {
+  const parsed = Number(value);
+  return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
+}
+
 function normalizeMovementName(name) {
   return String(name ?? '')
     .trim()
@@ -53,11 +58,11 @@ function resolveMovementIdForExercise(exercise, userId) {
 
 function addLog(payload, userId) {
   const exerciseId = parsePositiveInt(payload?.exerciseId);
-  const weight = parsePositiveInt(payload?.weight);
+  const weight = parseNonNegativeInt(payload?.weight);
   const reps = parsePositiveInt(payload?.reps);
   const parsedDate = parseOptionalLogDate(payload?.date);
 
-  if (!exerciseId || !weight || !reps) {
+  if (!exerciseId || weight === null || !reps) {
     return {
       status: 400,
       error: 'Peso, repeticiones y exerciseId deben ser números válidos'
@@ -106,11 +111,11 @@ function addLog(payload, userId) {
 
 function updateLog(logId, payload, userId) {
   const id = parsePositiveInt(logId);
-  const weight = parsePositiveInt(payload?.weight);
+  const weight = parseNonNegativeInt(payload?.weight);
   const reps = parsePositiveInt(payload?.reps);
   const parsedDate = parseOptionalLogDate(payload?.date);
 
-  if (!id || !weight || !reps) {
+  if (!id || weight === null || !reps) {
     return {
       status: 400,
       error: 'logId, peso y repeticiones deben ser números válidos'

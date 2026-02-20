@@ -68,6 +68,21 @@ test('addLog devuelve 400 con payload inválido', () => {
   assert.equal(result.error, 'Peso, repeticiones y exerciseId deben ser números válidos');
 });
 
+test('addLog permite guardar 0kg', () => {
+  const result = addLog({ exerciseId: demoExerciseId, weight: 0, reps: 12 }, demoUserId);
+
+  assert.equal(typeof result.id, 'number');
+
+  const inserted = db
+    .prepare('SELECT weight, reps FROM exercise_logs WHERE id = ?')
+    .get(result.id);
+
+  assert.deepEqual(inserted, {
+    weight: 0,
+    reps: 12
+  });
+});
+
 test('addLog devuelve 403 si ejercicio no pertenece al usuario', () => {
   const result = addLog({ exerciseId: demoExerciseId, weight: 70, reps: 8 }, otherUserId);
 

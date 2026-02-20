@@ -253,7 +253,7 @@
                   }
                   <div class="log-actions">
                     <button type="button" class="ghost" (click)="startEditProgressLog(log)">Editar</button>
-                    <button type="button" class="ghost danger" (click)="deleteProgressLog(log.id)">Eliminar</button>
+                    <button type="button" class="ghost danger" (click)="openDeleteLogConfirm(log.id)">Eliminar</button>
                   </div>
                 </div>
               } @else {
@@ -275,6 +275,19 @@
             </article>
           }
         </section>
+      }
+
+      @if (confirmDeleteLogId !== null) {
+        <div class="confirm-delete-backdrop" (click)="closeDeleteLogConfirm()">
+          <div class="confirm-delete-card" (click)="$event.stopPropagation()">
+            <h4>Eliminar registro</h4>
+            <p class="muted">Esta acción no se puede deshacer.</p>
+            <div class="row-actions">
+              <button type="button" class="danger" (click)="confirmDeleteLog()">Eliminar</button>
+              <button type="button" class="ghost" (click)="closeDeleteLogConfirm()">Cancelar</button>
+            </div>
+          </div>
+        </div>
       }
     </section>
   </div>

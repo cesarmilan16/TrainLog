@@ -282,6 +282,7 @@ body.dark .exercise-actions .secondary {
   width: min(760px, 100%);
   max-height: min(86vh, 820px);
   overflow: auto;
+  position: relative;
   padding-bottom: calc(0.9rem + env(safe-area-inset-bottom));
 }
 
@@ -461,6 +462,34 @@ body.dark .exercise-actions .secondary {
   width: 100%;
 }
 
+.confirm-delete-backdrop {
+  position: absolute;
+  inset: 0;
+  border-radius: 16px;
+  background: rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(2px);
+  display: grid;
+  place-items: center;
+  z-index: 5;
+  padding: 1rem;
+}
+
+.confirm-delete-card {
+  width: min(360px, 100%);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-md);
+  padding: 0.9rem;
+  display: grid;
+  gap: 0.55rem;
+}
+
+.confirm-delete-card h4 {
+  margin: 0;
+  font-size: 1.04rem;
+}
+
 html.dark .sheet-backdrop,
 body.dark .sheet-backdrop {
   background: rgba(2, 6, 23, 0.82);
@@ -486,6 +515,12 @@ html.dark .log-row,
 body.dark .log-row {
   border-color: var(--color-border-strong);
   background: rgba(30, 41, 59, 0.82);
+}
+
+html.dark .confirm-delete-card,
+body.dark .confirm-delete-card {
+  border-color: var(--color-border-strong);
+  background: rgba(30, 41, 59, 0.96);
 }
 
 html.dark .range-switch .ghost,

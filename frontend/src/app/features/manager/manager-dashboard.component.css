@@ -256,16 +256,8 @@ body.dark .manager::before {
 }
 
 .exercise-name {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
   font-size: 1.02rem;
   line-height: 1.2;
-}
-
-.exercise-order-dot {
-  font-size: 1.15em;
-  line-height: 1;
 }
 
 .exercise-main {

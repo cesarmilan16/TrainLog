@@ -262,10 +262,7 @@
                   @if (editingExerciseId !== exercise.id) {
                     <div class="list-row" (click)="$event.stopPropagation()">
                       <div class="exercise-content">
-                        <strong class="exercise-name">
-                          <span class="exercise-order-dot" aria-hidden="true">•</span>
-                          {{ exercise.order_index }} {{ exercise.name }}
-                        </strong>
+                        <strong class="exercise-name">{{ exercise.name }}</strong>
                         <p class="exercise-main">{{ exercise.sets }} series x {{ exercise.reps }} reps</p>
                         @if (exercise.rir !== null || exercise.rm_percent !== null) {
                           <p class="exercise-meta muted">

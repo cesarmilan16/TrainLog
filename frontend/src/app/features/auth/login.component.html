@@ -52,6 +52,17 @@
           <p class="error">{{ errorMessage }}</p>
         }
       </form>
+
+      <div class="demo-users">
+        <p class="demo-title">Usuarios demo (password: 1234)</p>
+        <div class="demo-list">
+          @for (item of demoUsers; track item.email) {
+            <button type="button" class="ghost demo-user-btn" (click)="useDemoAccount(item.email)">
+              {{ item.label }} · {{ item.email }}
+            </button>
+          }
+        </div>
+      </div>
     </div>
   </div>
 </section>

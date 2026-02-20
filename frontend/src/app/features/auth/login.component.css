@@ -98,6 +98,42 @@ h2 {
   margin-bottom: 1rem;
 }
 
+.demo-users {
+  margin-top: 1rem;
+  border-top: 1px solid var(--color-border);
+  padding-top: 0.85rem;
+}
+
+.demo-title {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: var(--color-text-muted);
+  margin-bottom: 0.45rem;
+}
+
+.demo-list {
+  display: grid;
+  gap: 0.34rem;
+}
+
+.demo-user-btn {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  min-height: 34px;
+  padding: 0.36rem 0.56rem;
+  font-size: 0.8rem;
+  background: color-mix(in srgb, var(--color-surface-soft) 84%, var(--color-surface));
+  color: var(--color-text);
+}
+
+.demo-user-btn:hover {
+  border-color: color-mix(in srgb, var(--color-primary) 42%, var(--color-border));
+  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
+}
+
 @media (max-width: 900px) {
   .login-card {
     max-width: 520px;

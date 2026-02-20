@@ -24,6 +24,14 @@ export class LoginComponent implements OnInit {
   loading = false;
   errorMessage = '';
   isDarkMode = false;
+  readonly demoUsers = [
+    { label: 'Manager Demo', email: 'demo@trainlog.com' },
+    { label: 'Cliente Demo', email: 'cliente@trainlog.com' },
+    { label: 'Cesar', email: 'cesar@trainlog.com' },
+    { label: 'Alegria', email: 'alegria@trainlog.com' },
+    { label: 'Alba', email: 'alba@trainlog.com' },
+    { label: 'Jose', email: 'jose@trainlog.com' }
+  ] as const;
 
   readonly form = this.fb.nonNullable.group({
     email: ['', [Validators.required, Validators.email]],
@@ -77,5 +85,14 @@ export class LoginComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  useDemoAccount(email: string): void {
+    this.form.patchValue({
+      email,
+      password: '1234'
+    });
+    this.errorMessage = '';
+    this.cdr.markForCheck();
   }
 }

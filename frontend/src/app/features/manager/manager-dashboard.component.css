@@ -436,7 +436,6 @@ body.dark .manager::before {
 
 .skeleton-item::after,
 .skeleton-dot::after {
-  content: '';
   position: absolute;
   inset: 0;
   transform: translateX(-100%);

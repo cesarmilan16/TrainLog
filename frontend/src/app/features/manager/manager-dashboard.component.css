@@ -1,7 +1,6 @@
 .manager {
   padding-block: 1.25rem 2.4rem;
   position: relative;
-  isolation: isolate;
 }
 
 .manager::before {

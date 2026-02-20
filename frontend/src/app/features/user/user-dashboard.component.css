@@ -195,6 +195,10 @@ body.dark .user::before {
 
 .inline {
   margin-top: 0.68rem;
+  padding: 0.62rem;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--color-surface-soft) 84%, var(--color-surface));
 }
 
 .two-col {
@@ -455,6 +459,90 @@ body.dark .exercise-actions .secondary {
 
 .edit-log-form {
   width: 100%;
+}
+
+html.dark .sheet-backdrop,
+body.dark .sheet-backdrop {
+  background: rgba(2, 6, 23, 0.82);
+}
+
+html.dark .progress-sheet,
+body.dark .progress-sheet {
+  background: linear-gradient(180deg, #1e293b, #172235);
+  border-color: var(--color-border-strong);
+}
+
+html.dark .inline,
+body.dark .inline {
+  border-color: var(--color-border-strong);
+  background: rgba(30, 41, 59, 0.78);
+}
+
+html.dark .kpi,
+body.dark .kpi,
+html.dark .chart-card,
+body.dark .chart-card,
+html.dark .log-row,
+body.dark .log-row {
+  border-color: var(--color-border-strong);
+  background: rgba(30, 41, 59, 0.82);
+}
+
+html.dark .range-switch .ghost,
+body.dark .range-switch .ghost,
+html.dark .metric-switch .ghost,
+body.dark .metric-switch .ghost,
+html.dark .close-btn,
+body.dark .close-btn,
+html.dark .row-actions .ghost,
+body.dark .row-actions .ghost,
+html.dark .log-actions .ghost,
+body.dark .log-actions .ghost {
+  border: 1px solid var(--color-border-strong);
+  background: rgba(30, 41, 59, 0.86);
+  color: #e2e8f0;
+}
+
+html.dark .range-switch .ghost:hover,
+body.dark .range-switch .ghost:hover,
+html.dark .metric-switch .ghost:hover,
+body.dark .metric-switch .ghost:hover,
+html.dark .close-btn:hover,
+body.dark .close-btn:hover,
+html.dark .row-actions .ghost:hover,
+body.dark .row-actions .ghost:hover,
+html.dark .log-actions .ghost:hover,
+body.dark .log-actions .ghost:hover {
+  border-color: rgba(74, 222, 128, 0.56);
+  background: rgba(22, 101, 52, 0.28);
+  color: #f0fdf4;
+}
+
+html.dark .range-switch .ghost.active,
+body.dark .range-switch .ghost.active,
+html.dark .metric-switch .ghost.active,
+body.dark .metric-switch .ghost.active {
+  border-color: rgba(74, 222, 128, 0.66);
+  background: rgba(22, 101, 52, 0.45);
+  color: #f0fdf4;
+}
+
+html.dark .row-actions button:not(.ghost),
+body.dark .row-actions button:not(.ghost),
+html.dark .edit-log-form button:not(.ghost),
+body.dark .edit-log-form button:not(.ghost) {
+  background: linear-gradient(120deg, #4ade80, #22c55e);
+  color: #05200e;
+}
+
+html.dark .log-actions .danger,
+body.dark .log-actions .danger {
+  color: #fecdd3;
+}
+
+html.dark input[type='date'],
+body.dark input[type='date'] {
+  color-scheme: dark;
 }
 
 .pr-badge {

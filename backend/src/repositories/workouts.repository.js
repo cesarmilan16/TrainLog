@@ -6,19 +6,13 @@ function getUserManagedByManager(userId, managerId) {
 
 function insertWorkout({ name, userId, managerId }) {
   return db
-    .prepare('INSERT INTO workouts (name, user_id, manager_id, mesocycle_id) VALUES (?, ?, ?, ?)')
-    .run(name, userId, managerId, null);
-}
-
-function insertWorkoutWithMesocycle({ name, userId, managerId, mesocycleId }) {
-  return db
-    .prepare('INSERT INTO workouts (name, user_id, manager_id, mesocycle_id) VALUES (?, ?, ?, ?)')
-    .run(name, userId, managerId, mesocycleId);
+    .prepare('INSERT INTO workouts (name, user_id, manager_id) VALUES (?, ?, ?)')
+    .run(name, userId, managerId);
 }
 
 function listActiveWorkoutsByUser(userId) {
   return db
-    .prepare('SELECT id, name, mesocycle_id FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC')
+    .prepare('SELECT id, name FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC')
     .all(userId);
 }
 
@@ -28,7 +22,6 @@ function listManagerWorkoutsByUser(userId, managerId) {
       SELECT
         workouts.id,
         workouts.name,
-        workouts.mesocycle_id,
         users.email AS name_user,
         COUNT(workout_exercises.id) AS exercises_count
       FROM workouts
@@ -36,28 +29,16 @@ function listManagerWorkoutsByUser(userId, managerId) {
       LEFT JOIN workout_exercises ON workout_exercises.workout_id = workouts.id
       WHERE workouts.user_id = ? AND workouts.manager_id = ? AND workouts.archived_at IS NULL
         AND (workout_exercises.archived_at IS NULL OR workout_exercises.id IS NULL)
-      GROUP BY workouts.id, workouts.name, workouts.mesocycle_id, users.email
+      GROUP BY workouts.id, workouts.name, users.email
       ORDER BY workouts.id DESC
     `)
     .all(userId, managerId);
 }
 
-function listDashboardWorkoutsByUser(userId, mesocycleId) {
-  if (mesocycleId === undefined) {
-    return db
-      .prepare('SELECT id, name, mesocycle_id FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC')
-      .all(userId);
-  }
-
-  if (mesocycleId === null) {
-    return db
-      .prepare('SELECT id, name, mesocycle_id FROM workouts WHERE user_id = ? AND archived_at IS NULL AND mesocycle_id IS NULL ORDER BY id DESC')
-      .all(userId);
-  }
-
+function listDashboardWorkoutsByUser(userId) {
   return db
-    .prepare('SELECT id, name, mesocycle_id FROM workouts WHERE user_id = ? AND archived_at IS NULL AND mesocycle_id = ? ORDER BY id DESC')
-    .all(userId, mesocycleId);
+    .prepare('SELECT id, name FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC')
+    .all(userId);
 }
 
 function listActiveExercisesByWorkout(workoutId) {
@@ -113,26 +94,13 @@ function renameWorkout(workoutId, name) {
 
 function getActiveWorkoutById(workoutId) {
   return db
-    .prepare('SELECT id, name, user_id, manager_id, mesocycle_id FROM workouts WHERE id = ? AND archived_at IS NULL')
+    .prepare('SELECT id, name, user_id, manager_id FROM workouts WHERE id = ? AND archived_at IS NULL')
     .get(workoutId);
-}
-
-function getMesocycleByIdForUser(mesocycleId, userId) {
-  return db
-    .prepare('SELECT id FROM mesocycles WHERE id = ? AND user_id = ?')
-    .get(mesocycleId, userId);
-}
-
-function setWorkoutMesocycle(workoutId, mesocycleId) {
-  return db
-    .prepare('UPDATE workouts SET mesocycle_id = ? WHERE id = ?')
-    .run(mesocycleId, workoutId);
 }
 
 module.exports = {
   getUserManagedByManager,
   insertWorkout,
-  insertWorkoutWithMesocycle,
   listActiveWorkoutsByUser,
   listManagerWorkoutsByUser,
   listDashboardWorkoutsByUser,
@@ -141,7 +109,5 @@ module.exports = {
   getActiveWorkoutOwnedByManager,
   archiveWorkoutAndExercises,
   renameWorkout,
-  getActiveWorkoutById,
-  getMesocycleByIdForUser,
-  setWorkoutMesocycle
+  getActiveWorkoutById
 };

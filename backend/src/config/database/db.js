@@ -48,24 +48,10 @@ function initSchema() {
       name TEXT NOT NULL,
       user_id INTEGER NOT NULL,
       manager_id INTEGER NOT NULL,
-      mesocycle_id INTEGER,
       archived_at DATETIME,
       FOREIGN KEY (user_id) REFERENCES users(id),
       FOREIGN KEY (manager_id) REFERENCES users(id),
-      FOREIGN KEY (mesocycle_id) REFERENCES mesocycles(id) ON DELETE SET NULL,
       UNIQUE(user_id, name)
-    );
-
-    CREATE TABLE IF NOT EXISTS mesocycles (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      name TEXT NOT NULL,
-      goal TEXT NOT NULL,
-      start_date TEXT NOT NULL,
-      end_date TEXT NOT NULL,
-      status TEXT NOT NULL DEFAULT 'PLANNED',
-      user_id INTEGER NOT NULL,
-      FOREIGN KEY (user_id) REFERENCES users(id),
-      CHECK (status IN ('PLANNED', 'ACTIVE', 'COMPLETED'))
     );
 
     CREATE TABLE IF NOT EXISTS movements (
@@ -122,31 +108,8 @@ function initSchema() {
 
   const workoutColumns = db.prepare('PRAGMA table_info(workouts)').all();
   const hasWorkoutArchivedAt = workoutColumns.some((column) => column.name === 'archived_at');
-  const hasWorkoutMesocycleId = workoutColumns.some((column) => column.name === 'mesocycle_id');
   if (!hasWorkoutArchivedAt) {
     db.exec('ALTER TABLE workouts ADD COLUMN archived_at DATETIME');
-  }
-  if (!hasWorkoutMesocycleId) {
-    db.exec('ALTER TABLE workouts ADD COLUMN mesocycle_id INTEGER');
-  }
-
-  const hasMesocyclesTable = db
-    .prepare("SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'mesocycles'")
-    .get();
-  if (!hasMesocyclesTable) {
-    db.exec(`
-      CREATE TABLE mesocycles (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        name TEXT NOT NULL,
-        goal TEXT NOT NULL,
-        start_date TEXT NOT NULL,
-        end_date TEXT NOT NULL,
-        status TEXT NOT NULL DEFAULT 'PLANNED',
-        user_id INTEGER NOT NULL,
-        FOREIGN KEY (user_id) REFERENCES users(id),
-        CHECK (status IN ('PLANNED', 'ACTIVE', 'COMPLETED'))
-      );
-    `);
   }
 
   const hasMovementTable = db
@@ -213,7 +176,6 @@ function seedExampleData({ reset = false } = {}) {
   const usersCount = db.prepare('SELECT COUNT(*) AS total FROM users').get().total;
 
   if (!reset && usersCount > 0) {
-    ensureDemoMesocycleForExistingData();
     return;
   }
 
@@ -223,7 +185,6 @@ function seedExampleData({ reset = false } = {}) {
         DELETE FROM exercise_logs;
         DELETE FROM workout_exercises;
         DELETE FROM workouts;
-        DELETE FROM mesocycles;
         DELETE FROM users;
         DELETE FROM sqlite_sequence;
       `);
@@ -260,7 +221,7 @@ function seedExampleData({ reset = false } = {}) {
       .prepare('INSERT INTO users (email, password, name, role, manager_id) VALUES (?, ?, ?, ?, ?)')
       .run('jose@trainlog.com', userPassword, 'Jose', 'USER', cesarId).lastInsertRowid;
 
-    const createWorkout = db.prepare('INSERT INTO workouts (name, user_id, manager_id, mesocycle_id) VALUES (?, ?, ?, ?)');
+    const createWorkout = db.prepare('INSERT INTO workouts (name, user_id, manager_id) VALUES (?, ?, ?)');
     const createExercise = db.prepare(
       `INSERT INTO workout_exercises
       (name, sets, reps, rir, rm_percent, order_index, workout_id, movement_id)
@@ -273,28 +234,9 @@ function seedExampleData({ reset = false } = {}) {
       'INSERT INTO exercise_logs (weight, reps, date, user_id, exercise_id, movement_id) VALUES (?, ?, ?, ?, ?, ?)'
     );
 
-    const fullBodyA = createWorkout.run('Full Body A', userId, managerId, null).lastInsertRowid;
-    const lowerBody = createWorkout.run('Lower Body', userId, managerId, null).lastInsertRowid;
-    const upperPush = createWorkout.run('Upper Push', userId, managerId, null).lastInsertRowid;
-
-    const activeMesocycleId = db
-      .prepare(`
-        INSERT INTO mesocycles (name, goal, start_date, end_date, status, user_id)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `)
-      .run(
-        'Hipertrofia Base 8 semanas',
-        'Hipertrofia',
-        '2026-01-05',
-        '2026-03-01',
-        'ACTIVE',
-        userId
-      ).lastInsertRowid;
-
-    const mesoUpper = createWorkout
-      .run('Meso Upper A', userId, managerId, activeMesocycleId).lastInsertRowid;
-    const mesoLower = createWorkout
-      .run('Meso Lower B', userId, managerId, activeMesocycleId).lastInsertRowid;
+    const fullBodyA = createWorkout.run('Full Body A', userId, managerId).lastInsertRowid;
+    const lowerBody = createWorkout.run('Lower Body', userId, managerId).lastInsertRowid;
+    const upperPush = createWorkout.run('Upper Push', userId, managerId).lastInsertRowid;
 
     const squatMovementId = getOrCreateMovementId(userId, 'Sentadilla');
     const benchMovementId = getOrCreateMovementId(userId, 'Press Banca');
@@ -319,9 +261,9 @@ function seedExampleData({ reset = false } = {}) {
     createExercise.run('Fondos en paralelas', 3, 10, 1, null, 3, upperPush, fondosMovementId);
 
     const createPushPullLegForUser = (targetUserId, targetManagerId) => {
-      const pushId = createWorkout.run('Push', targetUserId, targetManagerId, null).lastInsertRowid;
-      const pullId = createWorkout.run('Pull', targetUserId, targetManagerId, null).lastInsertRowid;
-      const legId = createWorkout.run('Leg', targetUserId, targetManagerId, null).lastInsertRowid;
+      const pushId = createWorkout.run('Push', targetUserId, targetManagerId).lastInsertRowid;
+      const pullId = createWorkout.run('Pull', targetUserId, targetManagerId).lastInsertRowid;
+      const legId = createWorkout.run('Leg', targetUserId, targetManagerId).lastInsertRowid;
 
       const pressBancaMovementId = getOrCreateMovementId(targetUserId, 'Press banca');
       const pressMilitarMovementId = getOrCreateMovementId(targetUserId, 'Press militar');
@@ -413,93 +355,12 @@ function seedExampleData({ reset = false } = {}) {
       { weight: 72, reps: 8, daysAgo: 9, minute: 54 }
     ]);
 
-    const mesoInclineMovementId = getOrCreateMovementId(userId, 'Press inclinado mancuernas');
-    const mesoPulldownMovementId = getOrCreateMovementId(userId, 'Jalón al pecho');
-    const mesoHackMovementId = getOrCreateMovementId(userId, 'Hack squat');
-    const mesoHipThrustMovementId = getOrCreateMovementId(userId, 'Hip thrust');
-
-    const mesoInclineId = createExercise
-      .run('Press inclinado mancuernas', 4, 10, 2, 72, 1, mesoUpper, mesoInclineMovementId).lastInsertRowid;
-    const mesoPulldownId = createExercise
-      .run('Jalón al pecho', 4, 10, 2, 70, 2, mesoUpper, mesoPulldownMovementId).lastInsertRowid;
-    const mesoHackId = createExercise
-      .run('Hack squat', 4, 8, 2, 78, 1, mesoLower, mesoHackMovementId).lastInsertRowid;
-    const mesoHipThrustId = createExercise
-      .run('Hip thrust', 4, 10, 1, 75, 2, mesoLower, mesoHipThrustMovementId).lastInsertRowid;
-
-    addProgressLogs(mesoInclineId, [
-      { weight: 24, reps: 11, daysAgo: 41, hour: 18, minute: 25 },
-      { weight: 26, reps: 10, daysAgo: 30, hour: 18, minute: 22 },
-      { weight: 28, reps: 9, daysAgo: 18, hour: 18, minute: 20 }
-    ]);
-    addProgressLogs(mesoHackId, [
-      { weight: 90, reps: 10, daysAgo: 38, hour: 19, minute: 11 },
-      { weight: 95, reps: 9, daysAgo: 26, hour: 19, minute: 8 },
-      { weight: 100, reps: 8, daysAgo: 13, hour: 19, minute: 6 }
-    ]);
-    createLog.run(55, 11, userId, mesoPulldownId, mesoPulldownMovementId);
-    createLog.run(110, 8, userId, mesoHipThrustId, mesoHipThrustMovementId);
-
     // Mantiene algunos logs sueltos para el resto de ejercicios.
     createLog.run(90, 8, userId, rdlId, rdlMovementId);
     createLog.run(60, 8, userId, inclineId, inclineMovementId);
   });
 
   seedTx();
-}
-
-function ensureDemoMesocycleForExistingData() {
-  const demoManager = db
-    .prepare("SELECT id FROM users WHERE email = 'demo@trainlog.com' AND role = 'MANAGER'")
-    .get();
-  const demoUser = db
-    .prepare("SELECT id FROM users WHERE email = 'cliente@trainlog.com' AND role = 'USER'")
-    .get();
-
-  if (!demoUser) {
-    return;
-  }
-
-  const mesocycleCount = db
-    .prepare('SELECT COUNT(*) AS total FROM mesocycles WHERE user_id = ?')
-    .get(demoUser.id).total;
-
-  if (mesocycleCount > 0) {
-    return;
-  }
-
-  const backfillTx = db.transaction(() => {
-    const mesocycleId = db
-      .prepare(`
-        INSERT INTO mesocycles (name, goal, start_date, end_date, status, user_id)
-        VALUES (?, ?, ?, ?, ?, ?)
-      `)
-      .run(
-        'Mesociclo Demo Base',
-        'Hipertrofia',
-        '2026-02-02',
-        '2026-03-29',
-        'ACTIVE',
-        demoUser.id
-      ).lastInsertRowid;
-
-    const existingWorkout = db
-      .prepare('SELECT id FROM workouts WHERE user_id = ? AND archived_at IS NULL ORDER BY id DESC LIMIT 1')
-      .get(demoUser.id);
-
-    if (existingWorkout) {
-      db.prepare('UPDATE workouts SET mesocycle_id = ? WHERE id = ?')
-        .run(mesocycleId, existingWorkout.id);
-      return;
-    }
-
-    if (demoManager) {
-      db.prepare('INSERT INTO workouts (name, user_id, manager_id, mesocycle_id) VALUES (?, ?, ?, ?)')
-        .run('Meso Full Body Demo', demoUser.id, demoManager.id, mesocycleId);
-    }
-  });
-
-  backfillTx();
 }
 
 function closeDb() {

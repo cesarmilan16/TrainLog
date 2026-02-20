@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, map } from 'rxjs';
 
-import { Exercise, ManagerClient, Mesocycle, MovementSuggestion, Workout } from '../models';
+import { Exercise, ManagerClient, MovementSuggestion, Workout } from '../models';
 
 @Injectable({ providedIn: 'root' })
 export class ManagerService {
@@ -32,24 +32,7 @@ export class ManagerService {
     );
   }
 
-  getUserMesocycles(userId: number): Observable<Mesocycle[]> {
-    return this.http.get<{ data: Mesocycle[] }>(`/mesocycles/user/${userId}`).pipe(
-      map((response) => response.data ?? [])
-    );
-  }
-
-  createMesocycle(payload: {
-    name: string;
-    goal: string;
-    startDate: string;
-    endDate: string;
-    status: Mesocycle['status'];
-    userId: number;
-  }) {
-    return this.http.post('/mesocycles', payload);
-  }
-
-  createWorkout(payload: { name: string; userId: number; mesocycleId?: number | null }) {
+  createWorkout(payload: { name: string; userId: number }) {
     return this.http.post('/workouts', payload);
   }
 

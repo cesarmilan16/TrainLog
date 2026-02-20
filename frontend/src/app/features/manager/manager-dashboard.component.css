@@ -101,10 +101,6 @@ body.dark .manager::before {
     linear-gradient(180deg, color-mix(in srgb, var(--color-surface) 96%, transparent), color-mix(in srgb, var(--color-surface-soft) 88%, var(--color-bg)));
 }
 
-.section-title-sub {
-  margin: 0.8rem 0 0.55rem;
-}
-
 .list,
 .exercise-list {
   display: grid;
@@ -112,10 +108,6 @@ body.dark .manager::before {
   max-height: 320px;
   overflow: auto;
   padding-right: 0.1rem;
-}
-
-.mesocycle-list {
-  max-height: 170px;
 }
 
 .list-row {

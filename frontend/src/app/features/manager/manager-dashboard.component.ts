@@ -82,8 +82,7 @@ export class ManagerDashboardComponent implements OnInit {
   });
 
   readonly createWorkoutForm = this.fb.nonNullable.group({
-    name: ['', Validators.required],
-    mesocycleId: ['']
+    name: ['', Validators.required]
   });
 
 
@@ -173,7 +172,7 @@ export class ManagerDashboardComponent implements OnInit {
   selectClient(clientId: number): void {
     this.selectedClientId = clientId;
     this.selectedWorkoutId = null;
-    this.createWorkoutForm.reset({ name: '', mesocycleId: '' });
+    this.createWorkoutForm.reset({ name: '' });
     // Evita mostrar workouts del cliente anterior mientras llega la nueva carga.
     this.workouts = [];
     this.exercises = [];
@@ -407,14 +406,11 @@ export class ManagerDashboardComponent implements OnInit {
     this.managerService
       .createWorkout({
         name: this.createWorkoutForm.getRawValue().name,
-        userId: this.selectedClientId,
-        ...(this.createWorkoutForm.getRawValue().mesocycleId
-          ? { mesocycleId: Number(this.createWorkoutForm.getRawValue().mesocycleId) }
-          : {})
+        userId: this.selectedClientId
       })
       .subscribe({
         next: () => {
-          this.createWorkoutForm.reset({ name: '', mesocycleId: '' });
+          this.createWorkoutForm.reset({ name: '' });
           this.showCreateWorkout = false;
           this.fetchWorkouts(this.selectedClientId as number);
           this.cdr.markForCheck();

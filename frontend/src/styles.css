@@ -309,15 +309,15 @@ label {
   }
 
   .theme-toggle {
-    min-width: 36px;
-    width: 36px;
-    height: 36px;
-    min-height: 36px;
-    border-radius: 10px;
+    min-width: 32px;
+    width: 32px;
+    height: 32px;
+    min-height: 32px;
+    border-radius: 9px;
   }
 
   .theme-toggle svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
   }
 }

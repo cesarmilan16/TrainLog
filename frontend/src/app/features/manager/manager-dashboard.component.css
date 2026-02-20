@@ -556,21 +556,21 @@ hr {
 
   .topbar-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: auto 1fr;
+    display: flex;
+    justify-content: space-between;
     align-items: center;
   }
 
   .topbar-actions .theme-toggle {
-    width: 36px;
-    min-width: 36px;
-    height: 36px;
-    min-height: 36px;
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    min-height: 32px;
     justify-self: start;
   }
 
   .topbar-actions .logout-btn {
-    width: 100%;
+    width: auto;
   }
 
   .topbar .muted {

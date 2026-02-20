@@ -221,17 +221,6 @@
                 <small class="field-error">El nombre es obligatorio</small>
               }
             </div>
-            @if (mesocycles.length > 0) {
-              <div class="field">
-                <label for="new-workout-mesocycle">Mesociclo (opcional)</label>
-                <select id="new-workout-mesocycle" formControlName="mesocycleId">
-                  <option value="">Sin mesociclo</option>
-                  @for (mesocycle of mesocycles; track mesocycle.id) {
-                    <option [value]="mesocycle.id">{{ mesocycle.name }} · {{ mesocycle.status }}</option>
-                  }
-                </select>
-              </div>
-            }
             <button type="submit" [disabled]="!selectedClientId">Crear workout</button>
           </form>
         }

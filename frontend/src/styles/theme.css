@@ -3,24 +3,24 @@
 
   --color-primary: #15803d;
   --color-primary-strong: #166534;
-  --color-primary-soft: #dcfce7;
+  --color-primary-soft: #bbf7d0;
 
-  --color-bg: #f1f5f9;
-  --color-bg-elevated: #e2e8f0;
+  --color-bg: #dde3ed;
+  --color-bg-elevated: #c8d2e0;
   --color-surface: #ffffff;
-  --color-surface-soft: #f8fafc;
+  --color-surface-soft: #f1f5f9;
 
-  --color-text: #0b1220;
-  --color-text-muted: #475569;
+  --color-text: #060d1a;
+  --color-text-muted: #334155;
 
-  --color-border: #cbd5e1;
-  --color-border-strong: #94a3b8;
+  --color-border: #94a3b8;
+  --color-border-strong: #64748b;
 
   --color-danger: #b91c1c;
 
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.10);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.14);
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.10);
+  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.16);
+  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.22);
 
   --radius-sm: 10px;
   --radius-md: 14px;

@@ -75,43 +75,6 @@
   font-weight: 700;
 }
 
-.demo-box {
-  margin-top: 0.2rem;
-  border: 1px solid color-mix(in srgb, #94a3b8 34%, transparent);
-  background: rgba(15, 23, 42, 0.52);
-  border-radius: 14px;
-  padding: 0.78rem;
-  font-size: 0.9rem;
-}
-
-.demo-title {
-  margin: 0 0 0.35rem;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  font-size: 0.68rem;
-  color: color-mix(in srgb, var(--color-primary) 70%, #fff);
-  font-weight: 800;
-}
-
-.demo-box p {
-  margin: 0.25rem 0;
-}
-
-.demo-inline {
-  display: none;
-  margin: -0.2rem 0 0.8rem;
-  padding: 0.55rem 0.65rem;
-  border-radius: 10px;
-  border: 1px dashed var(--color-border);
-  background: color-mix(in srgb, var(--color-primary) 10%, var(--color-surface));
-  font-size: 0.72rem;
-  line-height: 1.35;
-}
-
-.demo-inline small {
-  display: block;
-}
-
 .login-card {
   width: 100%;
   max-width: 440px;
@@ -166,11 +129,6 @@ h2 {
     order: 2;
   }
 
-  .demo-box {
-    font-size: 0.84rem;
-    padding: 0.7rem;
-  }
-
   .login-card {
     padding: 1rem;
     order: 1;
@@ -189,11 +147,6 @@ h2 {
 
   .login-info {
     display: none;
-  }
-
-  .demo-inline {
-    display: grid;
-    gap: 0.12rem;
   }
 
   .login-card {

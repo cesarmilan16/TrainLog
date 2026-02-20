@@ -81,6 +81,30 @@ body.dark .user::before {
   border: 1px solid color-mix(in srgb, var(--color-primary) 35%, var(--color-border));
 }
 
+.mesocycle-filter {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.28rem;
+  max-width: 360px;
+}
+
+.mesocycle-filter label {
+  margin-bottom: 0;
+}
+
+.mesocycle-filter select {
+  width: 100%;
+  min-height: 40px;
+  font-size: 0.9rem;
+}
+
+html.dark .mesocycle-filter select,
+body.dark .mesocycle-filter select {
+  border-color: var(--color-border-strong);
+  background: rgba(30, 41, 59, 0.9);
+  color: #f8fafc;
+}
+
 .app-error {
   margin: 0.9rem 0;
 }

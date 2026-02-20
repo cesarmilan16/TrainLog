@@ -7,7 +7,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 import { ThemeService } from '../../core/services/theme.service';
 import { UserService } from '../../core/services/user.service';
-import { DashboardWorkout, ExerciseLog } from '../../core/models';
+import { DashboardWorkout, ExerciseLog, Mesocycle } from '../../core/models';
 
 @Component({
   selector: 'app-user-dashboard',
@@ -26,6 +26,8 @@ export class UserDashboardComponent implements OnInit {
   private readonly cdr = inject(ChangeDetectorRef);
 
   dashboard: DashboardWorkout[] = [];
+  mesocycles: Mesocycle[] = [];
+  selectedMesocycleFilter: number | 'none' | null = null;
   expandedWorkouts = new Set<number>();
   isMobileView = false;
   loading = false;
@@ -62,7 +64,7 @@ export class UserDashboardComponent implements OnInit {
     this.isDarkMode = this.themeService.isDarkMode();
     this.userDisplayName = this.authService.currentUser()?.name || this.buildNameFromEmail(this.authService.currentUser()?.email);
     this.updateViewportState();
-    this.fetchDashboard();
+    this.fetchMesocycles();
   }
 
   toggleTheme(): void {
@@ -84,11 +86,12 @@ export class UserDashboardComponent implements OnInit {
     this.loading = true;
     this.errorMessage = '';
 
-    this.userService.getDashboard().subscribe({
+    const filter = this.selectedMesocycleFilter === null ? undefined : this.selectedMesocycleFilter;
+    this.userService.getDashboard(filter).subscribe({
       next: (dashboard) => {
         this.loading = false;
         this.dashboard = dashboard;
-        this.expandedWorkouts = this.isMobileView ? new Set(dashboard.length > 0 ? [dashboard[0].id] : []) : new Set();
+        this.syncExpandedWorkouts(dashboard);
         this.cdr.markForCheck();
       },
       error: (error: HttpErrorResponse) => {
@@ -97,6 +100,17 @@ export class UserDashboardComponent implements OnInit {
         this.cdr.markForCheck();
       }
     });
+  }
+
+  onMesocycleFilterChange(value: string): void {
+    if (value === 'none') {
+      this.selectedMesocycleFilter = 'none';
+    } else {
+      const parsed = Number(value);
+      this.selectedMesocycleFilter = Number.isInteger(parsed) && parsed > 0 ? parsed : 'none';
+    }
+
+    this.fetchDashboard();
   }
 
   openLog(exerciseId: number): void {
@@ -244,6 +258,7 @@ export class UserDashboardComponent implements OnInit {
     }).subscribe({
       next: () => {
         this.editingProgressLogId = null;
+        this.fetchDashboard();
         this.openProgress(this.progressExerciseId as number, this.progressExerciseName);
       },
       error: (error: HttpErrorResponse) => {
@@ -282,6 +297,7 @@ export class UserDashboardComponent implements OnInit {
         if (this.editingProgressLogId === logId) {
           this.editingProgressLogId = null;
         }
+        this.fetchDashboard();
         this.openProgress(this.progressExerciseId as number, this.progressExerciseName);
       },
       error: (error: HttpErrorResponse) => {
@@ -521,6 +537,38 @@ export class UserDashboardComponent implements OnInit {
 
   private getTodayDateInput(): string {
     return new Date().toISOString().slice(0, 10);
+  }
+
+  private fetchMesocycles(): void {
+    this.userService.getMyMesocycles().subscribe({
+      next: (mesocycles) => {
+        this.mesocycles = mesocycles;
+        this.selectedMesocycleFilter = mesocycles.length > 0 ? 'none' : null;
+        this.fetchDashboard();
+      },
+      error: () => {
+        this.mesocycles = [];
+        this.selectedMesocycleFilter = null;
+        this.fetchDashboard();
+      }
+    });
+  }
+
+  private syncExpandedWorkouts(dashboard: DashboardWorkout[]): void {
+    if (!this.isMobileView) {
+      this.expandedWorkouts = new Set();
+      return;
+    }
+
+    const existingIds = new Set(dashboard.map((workout) => workout.id));
+    const preserved = [...this.expandedWorkouts].filter((id) => existingIds.has(id));
+
+    if (preserved.length > 0) {
+      this.expandedWorkouts = new Set(preserved);
+      return;
+    }
+
+    this.expandedWorkouts = new Set(dashboard.length > 0 ? [dashboard[0].id] : []);
   }
 
   private buildNameFromEmail(email?: string): string {

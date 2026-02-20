@@ -10,27 +10,16 @@
         <span>Historial de cargas</span>
         <span>Seguimiento de progreso</span>
       </div>
-
-      <div class="demo-box">
-        <p class="demo-title">Accesos demo</p>
-        <p><strong>Manager:</strong> demo@trainlog.com / 1234</p>
-        <p><strong>Cliente:</strong> cliente@trainlog.com / 1234</p>
-      </div>
     </aside>
 
     <div class="card login-card">
       <p class="eyebrow">Workout App Access</p>
       <h2>Iniciar sesión</h2>
 
-      <div class="demo-inline muted">
-        <small><strong>Demo manager:</strong> demo@trainlog.com / 1234</small>
-        <small><strong>Demo cliente:</strong> cliente@trainlog.com / 1234</small>
-      </div>
-
       <form [formGroup]="form" (ngSubmit)="submit()" class="form-row">
         <div>
           <label for="email">Email</label>
-          <input id="email" type="email" formControlName="email" placeholder="demo@trainlog.com" />
+          <input id="email" type="email" formControlName="email" placeholder="tu@email.com" />
           @if (form.controls.email.touched && form.controls.email.hasError('required')) {
             <small class="error">El email es obligatorio</small>
           }

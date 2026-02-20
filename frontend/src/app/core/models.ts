@@ -30,8 +30,21 @@ export interface ManagerClient {
 export interface Workout {
   id: number;
   name: string;
+  mesocycle_id?: number | null;
   name_user?: string;
   exercises_count?: number;
+}
+
+export type MesocycleStatus = 'PLANNED' | 'ACTIVE' | 'COMPLETED';
+
+export interface Mesocycle {
+  id: number;
+  name: string;
+  goal: string;
+  startDate: string;
+  endDate: string;
+  status: MesocycleStatus;
+  userId: number;
 }
 
 export interface Exercise {
@@ -71,5 +84,6 @@ export interface DashboardExercise {
 export interface DashboardWorkout {
   id: number;
   name: string;
+  mesocycle_id?: number | null;
   exercises: DashboardExercise[];
 }

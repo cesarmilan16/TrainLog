@@ -9,6 +9,23 @@
         <span>{{ totalExercises }} ejercicios</span>
         <span>{{ exercisesWithLogs }} con historial</span>
       </div>
+      @if (mesocycles.length > 0) {
+        <div class="mesocycle-filter">
+          <label for="mesocycle-filter">Mesociclo</label>
+          <select
+            id="mesocycle-filter"
+            [value]="selectedMesocycleFilter ?? 'none'"
+            (change)="onMesocycleFilterChange($any($event.target).value)"
+          >
+            <option value="none">Sin mesociclo</option>
+            @for (mesocycle of mesocycles; track mesocycle.id) {
+              <option [value]="mesocycle.id">
+                {{ mesocycle.name }} · {{ mesocycle.status }}
+              </option>
+            }
+          </select>
+        </div>
+      }
     </div>
     <div class="topbar-actions">
       <button
@@ -40,7 +57,13 @@
   }
 
   @if (!loading && dashboard.length === 0) {
-    <p class="muted empty-state">No tienes workouts asignados todavía.</p>
+    <p class="muted empty-state">
+      @if (mesocycles.length > 0 && selectedMesocycleFilter !== null) {
+        No hay entrenamientos para este filtro de mesociclo.
+      } @else {
+        No tienes workouts asignados todavía.
+      }
+    </p>
   }
 
   @if (!loading) {

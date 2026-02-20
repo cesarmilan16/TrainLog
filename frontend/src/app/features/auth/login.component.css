@@ -46,6 +46,19 @@ body.dark .login-wrap::after {
     radial-gradient(44rem 28rem at 90% 8%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 62%);
 }
 
+.login-wrap.dark-mode::before {
+  background:
+    linear-gradient(120deg, rgba(2, 6, 23, 0.82), rgba(2, 6, 23, 0.62)),
+    url('/login-bg.png') center/cover no-repeat,
+    linear-gradient(135deg, #05070c, #0f172a);
+}
+
+.login-wrap.dark-mode::after {
+  background:
+    radial-gradient(45rem 28rem at 18% 88%, color-mix(in srgb, var(--color-primary) 22%, transparent), transparent 65%),
+    radial-gradient(44rem 28rem at 90% 8%, color-mix(in srgb, var(--color-primary) 16%, transparent), transparent 62%);
+}
+
 .login-grid {
   width: min(520px, 100%);
   padding-inline: min(2.8vw, 1rem);

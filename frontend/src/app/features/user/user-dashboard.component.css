@@ -703,4 +703,31 @@ body.dark input[type='date'] {
   .log-actions {
     width: 100%;
   }
+
+  .inline input[type='date'],
+  .inline input[type='time'],
+  .edit-log-form input[type='date'],
+  .edit-log-form input[type='time'] {
+    -webkit-appearance: none;
+    appearance: none;
+    min-height: 46px;
+    text-align: left;
+    font-variant-numeric: tabular-nums;
+    padding-right: 2.2rem;
+  }
+
+  .inline input[type='date']::-webkit-date-and-time-value,
+  .inline input[type='time']::-webkit-date-and-time-value,
+  .edit-log-form input[type='date']::-webkit-date-and-time-value,
+  .edit-log-form input[type='time']::-webkit-date-and-time-value {
+    text-align: left;
+  }
+
+  .inline input[type='date']::-webkit-calendar-picker-indicator,
+  .inline input[type='time']::-webkit-calendar-picker-indicator,
+  .edit-log-form input[type='date']::-webkit-calendar-picker-indicator,
+  .edit-log-form input[type='time']::-webkit-calendar-picker-indicator {
+    opacity: 1;
+    cursor: pointer;
+  }
 }

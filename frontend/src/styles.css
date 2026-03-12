@@ -31,14 +31,6 @@ body {
     linear-gradient(180deg, var(--color-bg), var(--color-bg-elevated));
 }
 
-html:not(.dark) body,
-body:not(.dark) {
-  background:
-    radial-gradient(68rem 34rem at -8% -12%, rgba(34, 197, 94, 0.18), transparent 58%),
-    radial-gradient(60rem 34rem at 110% -18%, rgba(59, 130, 246, 0.14), transparent 54%),
-    linear-gradient(180deg, #f8fbff 0%, #eef4fc 46%, #e9f1fb 100%);
-}
-
 ::selection {
   background: color-mix(in srgb, var(--color-primary) 26%, transparent);
 }
@@ -138,53 +130,11 @@ button.ghost:hover {
   box-shadow: none;
 }
 
-html.dark .logout-btn,
-body.dark .logout-btn {
+.logout-btn {
   color: #ffffff;
 }
 
-html.dark .logout-btn:hover,
-body.dark .logout-btn:hover {
-  color: #ffffff;
-}
-
-.theme-toggle {
-  min-width: 42px;
-  width: 42px;
-  height: 42px;
-  min-height: 42px;
-  padding: 0;
-  border-radius: 12px;
-  border: 1px solid var(--color-border);
-  background: var(--color-surface);
-  color: var(--color-text);
-  display: inline-grid;
-  place-items: center;
-}
-
-.theme-toggle:hover {
-  border-color: color-mix(in srgb, var(--color-primary) 38%, var(--color-border));
-  background: color-mix(in srgb, var(--color-primary) 11%, var(--color-surface));
-}
-
-.theme-toggle svg {
-  width: 18px;
-  height: 18px;
-  display: block;
-}
-
-.theme-toggle .icon-moon {
-  display: none;
-}
-
-html.dark .theme-toggle .icon-sun,
-body.dark .theme-toggle .icon-sun {
-  display: none;
-}
-
-html.dark .theme-toggle .icon-moon,
-body.dark .theme-toggle .icon-moon {
-  display: block;
+.logout-btn:hover {
   color: #ffffff;
 }
 
@@ -308,16 +258,4 @@ label {
     flex-direction: column;
   }
 
-  .theme-toggle {
-    min-width: 32px;
-    width: 32px;
-    height: 32px;
-    min-height: 32px;
-    border-radius: 9px;
-  }
-
-  .theme-toggle svg {
-    width: 14px;
-    height: 14px;
-  }
 }

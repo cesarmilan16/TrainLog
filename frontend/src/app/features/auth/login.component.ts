@@ -4,7 +4,6 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 
 import { AuthService } from '../../core/services/auth.service';
-import { ThemeService } from '../../core/services/theme.service';
 
 @Component({
   selector: 'app-login',
@@ -17,13 +16,11 @@ import { ThemeService } from '../../core/services/theme.service';
 export class LoginComponent implements OnInit {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
-  private readonly themeService = inject(ThemeService);
   private readonly router = inject(Router);
   private readonly cdr = inject(ChangeDetectorRef);
 
   loading = false;
   errorMessage = '';
-  isDarkMode = false;
   readonly demoUsers = [
     { label: 'Manager Demo', email: 'demo@trainlog.com' },
     { label: 'Cliente Demo', email: 'cliente@trainlog.com' }
@@ -34,14 +31,7 @@ export class LoginComponent implements OnInit {
     password: ['', [Validators.required]]
   });
 
-  ngOnInit(): void {
-    this.isDarkMode = this.themeService.isDarkMode();
-  }
-
-  toggleTheme(): void {
-    this.isDarkMode = this.themeService.toggleTheme() === 'dark';
-    this.cdr.markForCheck();
-  }
+  ngOnInit(): void {}
 
   submit(): void {
     this.errorMessage = '';

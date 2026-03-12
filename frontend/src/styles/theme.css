@@ -1,42 +1,4 @@
 :root {
-  color-scheme: light;
-
-  --color-primary: #15803d;
-  --color-primary-strong: #166534;
-  --color-primary-soft: #bbf7d0;
-
-  --color-bg: #dde3ed;
-  --color-bg-elevated: #c8d2e0;
-  --color-surface: #ffffff;
-  --color-surface-soft: #f1f5f9;
-
-  --color-text: #060d1a;
-  --color-text-muted: #334155;
-
-  --color-border: #94a3b8;
-  --color-border-strong: #64748b;
-
-  --color-danger: #b91c1c;
-
-  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.10);
-  --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.16);
-  --shadow-lg: 0 16px 40px rgba(0, 0, 0, 0.22);
-
-  --radius-sm: 10px;
-  --radius-md: 14px;
-  --radius-lg: 18px;
-
-  --space-1: 0.25rem;
-  --space-2: 0.5rem;
-  --space-3: 0.75rem;
-  --space-4: 1rem;
-  --space-5: 1.25rem;
-  --space-6: 1.5rem;
-  --space-7: 2rem;
-}
-
-html.dark,
-body.dark {
   color-scheme: dark;
 
   --color-primary: #4ade80;
@@ -59,4 +21,16 @@ body.dark {
   --shadow-sm: 0 8px 20px rgba(2, 6, 23, 0.28);
   --shadow-md: 0 16px 40px rgba(2, 6, 23, 0.36);
   --shadow-lg: 0 26px 56px rgba(2, 6, 23, 0.5);
+
+  --radius-sm: 10px;
+  --radius-md: 14px;
+  --radius-lg: 18px;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-7: 2rem;
 }
